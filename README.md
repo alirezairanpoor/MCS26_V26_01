@@ -2,28 +2,34 @@
 
 MCS26_V26_01 is a browser-based Mission Control System simulator for role-based spacecraft operations training.
 
-The simulator reproduces simplified mission operations workflows, including procedure execution, telemetry monitoring, telecommand execution, emergency handling, and imaging mission scenarios.
+The simulator reproduces simplified mission operations workflows, including procedure execution, telemetry monitoring, telecommand execution, emergency handling, GNC coordination, SPACON command execution, and imaging mission scenarios.
 
 ---
 
 ## Overview
 
-This project is built as an interactive mission operations simulator.
+This project is an interactive mission operations simulator.
 
-It includes multiple operator roles:
+It supports multiple operator roles:
 
 - SOM — Spacecraft Operations Manager
 - SOE1 — Subsystem Operator / Engineer 1
 - SOE2 — Subsystem Operator / Engineer 2
 - SPACON — Spacecraft Controller
 
-The SOM follows a step-by-step procedure table.
+The simulator is designed for synchronized multi-computer operation. A Host / Simulation Server runs the frontend and WebSocket sync server. Operator computers connect through role-based URLs.
 
-SOE operators report subsystem telemetry values.
+Recommended architecture:
 
-SPACON executes spacecraft commands using a command selection, ARM, and GO workflow.
+```text
+Computer 0 = Host / Simulation Server
+Computer 1 = SOM
+Computer 2 = SPACON
+Computer 3 = SOE1
+Computer 4 = SOE2
+```
 
-The simulator is intended to support role-based training, mission procedure familiarization, and operational coordination exercises.
+The Host computer does not need to act as an operator.
 
 ---
 
@@ -69,15 +75,19 @@ Main mission phases:
 ## Main Features
 
 - Role-based mission operations workflow
+- Role-based URLs for SOM, SOE, and SPACON
+- Shared WebSocket state synchronization between operator clients
+- Independent local panel selection for each operator
 - SOM procedure table
 - SOE telemetry reporting workflow
-- SPACON command execution with ARM / GO logic
+- SPACON command execution with command selection, ARM, and GO logic
 - Ground Station, EPS, Payload, and Memory panels
 - TM History and TC History tables
 - Emergency modal and GNC response workflow
 - Dynamic procedure import for emergency recovery
-- Scenario-specific imaging windows
-- Production server scripts for local network operation
+- Synchronized end-of-simulation video sequence
+- Local network operation over Wi-Fi or LAN
+- Helper scripts for host startup and role-based client access
 
 ---
 
@@ -86,6 +96,8 @@ Main mission phases:
 - Vue 3
 - TypeScript
 - Vite
+- Socket.IO
+- Express
 - JavaScript
 - CSS
 - HTML
@@ -102,131 +114,193 @@ npm install
 
 ---
 
-## Development Mode
+## Run the Synchronized Simulation
 
-Run the development server:
-
-```bash
-npm run dev
-```
-
-Then open the simulator locally:
+The simulation requires two services on the Host computer:
 
 ```text
-http://localhost:5173/
+Frontend server        port 5173
+WebSocket sync server  port 3001
 ```
 
-The development server is configured to run with network access enabled.
+### Start the Host
 
-Other computers in the same local network can open the simulator through the host IP address and port `5173`.
+On the Host computer, run:
+
+```text
+scripts/start-host-dev.bat
+```
+
+Keep both terminal windows open.
+
+### Find the Host IP
+
+On the Host computer, run:
+
+```text
+scripts/show-host-ip.bat
+```
+
+Use the IPv4 address of the Host computer.
+
+### Open Role Clients
+
+Replace `HOST-IP` with the Host computer IPv4 address.
+
+```text
+SOM:    http://HOST-IP:5173/?role=SOM
+SPACON: http://HOST-IP:5173/?role=SPACON
+SOE1:   http://HOST-IP:5173/?role=SOE
+SOE2:   http://HOST-IP:5173/?role=SOE
+```
 
 Example:
 
 ```text
-http://HOST-IP-ADDRESS:5173/
+http://192.168.178.129:5173/?role=SOM
+```
+
+Shortcut scripts are available:
+
+```text
+scripts/open-som.bat
+scripts/open-spacon.bat
+scripts/open-soe1.bat
+scripts/open-soe2.bat
+```
+
+Each script asks for the Host IP address and opens the correct role URL.
+
+For more details, see:
+
+```text
+RUN_SIMULATION.md
 ```
 
 ---
 
-## Production Build
+## Manual Development Commands
 
-Build the project:
+Run the WebSocket sync server:
+
+```bash
+npm run start:server
+```
+
+Run the frontend server:
+
+```bash
+npm run start:frontend
+```
+
+Equivalent legacy commands:
+
+```bash
+npm run server
+npm run dev
+```
+
+---
+
+## Build
+
+Build the frontend:
 
 ```bash
 npm run build
 ```
 
-Preview the production build:
+Preview the frontend build:
 
 ```bash
 npm run preview
 ```
 
-Then open the simulator locally:
+Important: the synchronized multi-computer simulation still requires the WebSocket sync server:
 
-```text
-http://localhost:4173/
-```
-
-Other computers in the same local network can open the production preview through the host IP address and port `4173`.
-
-Example:
-
-```text
-http://HOST-IP-ADDRESS:4173/
+```bash
+npm run start:server
 ```
 
 ---
 
 ## Local Network Operation
 
-The simulator can be hosted on one computer and opened from other computers in the same local network.
+The simulator can run over Wi-Fi or LAN.
 
-The host computer starts the production server.
+Only the Host IP address changes.
 
-Other computers open the simulator through the host IP address.
+For LAN operation, use the IPv4 address of the Host computer on the LAN adapter.
 
-Example:
+The following ports must be reachable from all operator computers:
 
 ```text
-http://192.168.2.183:4173/
+5173 - Frontend server
+3001 - WebSocket sync server
 ```
 
-The IP address may be different on another network or on another day.
-
-Before running the simulator in a lab environment, check the current host IP address.
+If clients cannot connect, allow both ports in Windows Firewall on the Host computer.
 
 ---
 
 ## Host Scripts
 
-The `scripts` folder contains helper files for running the simulator on a host computer.
+The `scripts` folder contains helper files for running and opening the simulator.
 
 ```text
-scripts/start-host-production.bat
-scripts/open-simulator.bat
+scripts/start-host-dev.bat
 scripts/show-host-ip.bat
+scripts/open-som.bat
+scripts/open-spacon.bat
+scripts/open-soe1.bat
+scripts/open-soe2.bat
 ```
 
-### `start-host-production.bat`
+### `start-host-dev.bat`
 
-Builds the project and starts the production preview server.
+Starts the Host services:
 
-This file should be executed on the host computer.
+- WebSocket sync server
+- Vite frontend server
 
-The server window must remain open while the simulator is being used.
-
-### `open-simulator.bat`
-
-Opens the simulator in the browser using the configured host IP address.
-
-This file can be used on the host computer and on other computers in the same local network.
-
-If the host IP address changes, the URL inside this file must be updated.
+This file should be executed on the Host computer.
 
 ### `show-host-ip.bat`
 
-Displays the current IPv4 addresses of the host computer.
+Displays the current IPv4 addresses of the Host computer.
 
-This file is useful before a lab session to confirm that the simulator shortcut still uses the correct host IP address.
+### `open-som.bat`
+
+Opens the simulator with role `SOM`.
+
+### `open-spacon.bat`
+
+Opens the simulator with role `SPACON`.
+
+### `open-soe1.bat`
+
+Opens the simulator with role `SOE`.
+
+### `open-soe2.bat`
+
+Opens the simulator with role `SOE`.
 
 ---
 
 ## Recommended Host Workflow
 
-On the host computer:
+On the Host computer:
 
-1. Run `show-host-ip.bat`.
-2. Confirm that the IP address matches the URL inside `open-simulator.bat`.
-3. Run `start-host-production.bat`.
-4. Keep the server window open.
-5. Run `open-simulator.bat` to open the simulator in the browser.
+1. Run `scripts/start-host-dev.bat`.
+2. Run `scripts/show-host-ip.bat`.
+3. Keep both server windows open.
 
-On the other computers:
+On the operator computers:
 
-1. Make sure they are connected to the same local network.
-2. Run `open-simulator.bat`.
-3. The browser should open the simulator from the host computer.
+1. Make sure they are connected to the same Wi-Fi or LAN.
+2. Run the correct role script.
+3. Enter the Host IP address.
+4. Operate the simulator according to the assigned role.
 
 ---
 
@@ -236,9 +310,9 @@ The simulator must be operated by following the procedure table step by step.
 
 The SOM is responsible for coordinating the procedure flow.
 
-However, the correct order of actions depends on whether the SOM is asking SOE1 / SOE2 for telemetry or requesting SPACON to execute a command.
+SOE operators observe subsystem telemetry values.
 
-This distinction is critical for operating the simulator correctly.
+SPACON executes spacecraft commands after the SOM requests command execution.
 
 ---
 
@@ -246,7 +320,7 @@ This distinction is critical for operating the simulator correctly.
 
 When the procedure step requires SOE1 or SOE2 to report a telemetry value, the SOM must first ask the responsible operator for the value.
 
-The SOE operator then opens the correct subsystem panel, checks the requested telemetry parameter, and reports the value back to the SOM.
+The SOE operator opens the correct subsystem panel, checks the requested telemetry parameter, and reports the value back to the SOM.
 
 After receiving the information, the SOM compares the reported value with the success criteria shown in the procedure table.
 
@@ -262,39 +336,13 @@ SOM checks criteria
 SOM presses action button
 ```
 
-Short form:
-
-```text
-Ask → receive value → check criteria → press SOM action button
-```
-
-Example:
-
-```text
-SOM: SOE1, please report GS1 / GEL005.
-
-SOE1: GS1 / GEL005 is above 5 degrees.
-
-SOM checks the procedure criteria.
-
-SOM presses the action button.
-```
-
-Important:
-
-```text
-For SOE telemetry steps, the SOM action button is pressed after the telemetry value has been reported and checked.
-```
-
 ---
 
 ### Case 2 — SOM requests SPACON command execution
 
 When the procedure step requires SPACON to execute a spacecraft command, the order is different.
 
-In this case, the SOM must press the action button first.
-
-This action officially sends the command request to SPACON.
+The SOM must press the action button first. This officially sends the command request to SPACON.
 
 Only after the SOM has pressed the action button, SPACON selects and executes the requested command.
 
@@ -308,53 +356,7 @@ SPACON presses GO
 Command result is shown in TC History
 ```
 
-Short form:
-
-```text
-Press SOM action button → SPACON selects command → ARM → GO
-```
-
-Example:
-
-```text
-SOM requests SPACON to execute Dump Payload Memory.
-
-SOM presses the action button.
-
-SPACON selects MEM221 Dump Payload Memory.
-
-SPACON presses ARM.
-
-SPACON presses GO.
-
-The command result appears in TC History.
-```
-
-Important:
-
-```text
-For SPACON command steps, the SOM action button is pressed before SPACON executes the command.
-```
-
 SPACON must not execute a command before the SOM has requested it through the procedure action button.
-
----
-
-## Critical Operation Rule
-
-For SOE telemetry steps:
-
-```text
-Ask first, receive the value, check the criteria, then press the SOM action button.
-```
-
-For SPACON command steps:
-
-```text
-Press the SOM action button first, then SPACON executes the command.
-```
-
-This rule is essential for using the simulator correctly.
 
 ---
 
@@ -368,13 +370,9 @@ SPACON command execution always follows the same sequence:
 4. Press GO.
 5. Check the command result in TC History.
 
-SPACON should only execute a command after the SOM has requested it through the procedure table.
-
 ---
 
 ## Status Colors
-
-The simulator uses color-coded statuses to support fast operational understanding.
 
 General meaning:
 
@@ -394,10 +392,19 @@ MCS26_V26_01/
 ├── docs/
 ├── public/
 ├── scripts/
+│   ├── start-host-dev.bat
+│   ├── show-host-ip.bat
+│   ├── open-som.bat
+│   ├── open-spacon.bat
+│   ├── open-soe1.bat
+│   └── open-soe2.bat
 ├── src/
 │   ├── App.vue
 │   ├── main.ts
 │   └── style.css
+├── server.js
+├── RUN_SIMULATION.md
+├── .gitattributes
 ├── .gitignore
 ├── LICENSE
 ├── README.md
