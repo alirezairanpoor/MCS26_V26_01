@@ -80,6 +80,14 @@ const introVideoRef = ref<HTMLVideoElement | null>(null);
 const endingPhase = ref<"none" | "fade" | "video">("none");
 const endVideoRef = ref<HTMLVideoElement | null>(null);
 
+const introAudioRef = ref<HTMLAudioElement | null>(null);
+const fomAudioRef = ref<HTMLAudioElement | null>(null);
+const startAudioRef = ref<HTMLAudioElement | null>(null);
+
+const audioUnlocked = ref(false);
+
+let introFadeInterval: number | undefined;
+let fomFadeInterval: number | undefined;
 
 
 const emergencyStep = ref<'summary' | 'contacts' | 'compose' | 'waiting'>('summary');
@@ -395,6 +403,7 @@ const nextOrbitDelay = 1800; // 30 minutes until next AOS
 const maxElevation = 38;
 const minRange = 420;
 const maxRange = 2100;
+const gs1AosDelay = 60;
 
 
 
@@ -406,20 +415,29 @@ const timeToLOSClass = computed(() => {
   return "status-good";
 });
 
+
+const gs1PassSecond = computed(() => {
+  if (simulationStatus.value !== "RUNNING") return 0;
+  return Math.max(0, missionSeconds.value - gs1AosDelay);
+});
+
+
 const passProgress = computed(() => {
-  if (missionSeconds.value <= 0) return 0;
-  if (missionSeconds.value >= passDuration) return 1;
-  return missionSeconds.value / passDuration;
+  if (gs1PassSecond.value <= 0) return 0;
+  if (gs1PassSecond.value >= passDuration) return 1;
+  return gs1PassSecond.value / passDuration;
 });
 
 const nominalGs1Elevation = computed(() => {
-  if (missionSeconds.value === 0) return null;
+  if (simulationStatus.value !== "RUNNING") return null;
+  if (missionSeconds.value < gs1AosDelay) return null;
   if (isLos.value) return 0;
   return Number((Math.sin(Math.PI * passProgress.value) * maxElevation).toFixed(1));
 });
 
 const elevation = computed(() => {
-  if (missionSeconds.value === 0) return null;
+  if (simulationStatus.value !== "RUNNING") return null;
+  if (missionSeconds.value < gs1AosDelay) return null;
 
   if (isScenario2.value && !gs1ConnectionActive.value) {
     if (gs1LossStartSecond.value === null) return 0;
@@ -432,14 +450,16 @@ const elevation = computed(() => {
 });
 
 const azimuth = computed(() => {
-  if (missionSeconds.value === 0) return null;
+  if (simulationStatus.value !== "RUNNING") return null;
+  if (missionSeconds.value < gs1AosDelay) return null;
   if (isLos.value) return null;
 
   return Number((230 + (70 - 230) * passProgress.value).toFixed(1));
 });
 
 const range = computed(() => {
-  if (missionSeconds.value === 0) return null;
+  if (simulationStatus.value !== "RUNNING") return null;
+  if (missionSeconds.value < gs1AosDelay) return null;
   if (isLos.value) return null;
 
   const curve = Math.sin(Math.PI * passProgress.value);
@@ -2144,7 +2164,121 @@ function somVerifyCamera() {
   resultStatus.value = "SOM VERIFIED - CAMERA READY";
 }
 
+
+function playIntroAudio() {
+  const introAudio = introAudioRef.value;
+  const fomAudio = fomAudioRef.value;
+
+  if (introFadeInterval) {
+    window.clearInterval(introFadeInterval);
+    introFadeInterval = undefined;
+  }
+
+  if (fomFadeInterval) {
+    window.clearInterval(fomFadeInterval);
+    fomFadeInterval = undefined;
+  }
+
+  if (introAudio) {
+    introAudio.loop = true;
+    introAudio.volume = 1;
+
+    introAudio.play().catch(() => {
+      // Browser blocked autoplay until first user interaction.
+    });
+  }
+
+  if (fomAudio) {
+    fomAudio.loop = true;
+    fomAudio.volume = 0.55;
+
+    fomAudio.play().catch(() => {
+      // Browser blocked autoplay until first user interaction.
+    });
+  }
+}
+
+function fadeOutIntroAudio(durationMs = 1000) {
+  const introAudio = introAudioRef.value;
+  const fomAudio = fomAudioRef.value;
+
+  if (introFadeInterval) {
+    window.clearInterval(introFadeInterval);
+    introFadeInterval = undefined;
+  }
+
+  if (fomFadeInterval) {
+    window.clearInterval(fomFadeInterval);
+    fomFadeInterval = undefined;
+  }
+
+  const steps = 20;
+  const stepTime = durationMs / steps;
+
+  if (introAudio) {
+    const introStartVolume = introAudio.volume;
+    let introStep = 0;
+
+    introFadeInterval = window.setInterval(() => {
+      introStep += 1;
+      introAudio.volume = Math.max(0, introStartVolume * (1 - introStep / steps));
+
+      if (introStep >= steps) {
+        window.clearInterval(introFadeInterval);
+        introFadeInterval = undefined;
+        introAudio.pause();
+        introAudio.currentTime = 0;
+        introAudio.volume = 1;
+      }
+    }, stepTime);
+  }
+
+  if (fomAudio) {
+    const fomStartVolume = fomAudio.volume;
+    let fomStep = 0;
+
+    fomFadeInterval = window.setInterval(() => {
+      fomStep += 1;
+      fomAudio.volume = Math.max(0, fomStartVolume * (1 - fomStep / steps));
+
+      if (fomStep >= steps) {
+        window.clearInterval(fomFadeInterval);
+        fomFadeInterval = undefined;
+        fomAudio.pause();
+        fomAudio.currentTime = 0;
+        fomAudio.volume = 0.55;
+      }
+    }, stepTime);
+  }
+}
+
+function playStartAudio() {
+  const audio = startAudioRef.value;
+  if (!audio) return;
+
+  audio.loop = false;
+  audio.volume = 1;
+  audio.currentTime = 0;
+
+  audio.play().catch(() => {
+    // Browser blocked audio playback.
+  });
+}
+
+function unlockAudio() {
+  audioUnlocked.value = true;
+
+  if (!selectedScenario.value && introPhase.value === "menu") {
+    playIntroAudio();
+  }
+}
+
+
 async function selectScenario(name: string) {
+  unlockAudio();
+  fadeOutIntroAudio(1000);
+  playStartAudio();
+
   pendingScenario.value = name;
   introPhase.value = "fade";
 
@@ -2216,6 +2350,7 @@ function confirmBackToScenarioSelection() {
   backConfirmArmed.value = false;
   selectedScenario.value = "";
   resetSimulation();
+  playIntroAudio();
 
   syncNow();
 }
@@ -2750,6 +2885,9 @@ function runSomSpaconCommand(command: string, action: string) {
 async function startEndSequence() {
   if (endingPhase.value !== "none") return;
 
+  fadeOutIntroAudio(500);
+  playStartAudio();
+
   endingPhase.value = "fade";
   syncNow();
 
@@ -2795,6 +2933,7 @@ function finishEndSequence() {
   simulationStatus.value = "IDLE";
 
   resetSimulation();
+  playIntroAudio();
 
   syncNow();
 }
@@ -2941,10 +3080,24 @@ return "FAILED - UNKNOWN COMMAND";
 
 <template>
 
- 
+  <audio ref="introAudioRef" preload="auto">
+    <source src="/audio/intro.mp3" type="audio/mpeg" />
+  </audio>
 
+  <audio ref="fomAudioRef" preload="auto">
+  <source src="/audio/FOM.mp3" type="audio/mpeg" />
+</audio>
 
- <div v-if="!selectedScenario" class="scenario-screen">
+  <audio ref="startAudioRef" preload="auto">
+    <source src="/audio/start.mp3" type="audio/mpeg" />
+  </audio>
+
+  <div
+    v-if="!selectedScenario"
+    class="scenario-screen"
+    @pointerdown="unlockAudio"
+  >
+
   <video
     class="start-background-video"
     autoplay
