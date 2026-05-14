@@ -3103,16 +3103,16 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM</td>
                 <td>Start simulation.</td>
                 <td>Operation Start</td>
-                <td><button @click="startSimulation" :disabled="!isSom || simulationStatus === 'RUNNING'">Start Simulation</button></td>
+                <td><button @click="startSimulation" :disabled="!isSom || simulationStatus === 'RUNNING'">Initiate ground pass</button></td>
                 <td :class="classForStep(1, simulationStatus !== 'IDLE')">{{ statusForStep(1, simulationStatus !== "IDLE") }}</td>
               </tr>
 
               <tr>
                 <td>2</td>
                 <td>SOM → SOE1</td>
-                <td>Ask SOE1 to open Ground Station panel and report <strong>GS1 / GEL005</strong> current elevation.</td>
+                <td>Ask SOE1 to open Ground Station panel and report GS1 <strong>GEL005</strong> current elevation.</td>
                 <td>Elevation/<strong>GEL005</strong> value reported</td>
-                <td><button @click="somAskElevation" :disabled="!isSom || !canSomAskElevation()" :class="{ actionFail: failedSomAction === 'askElevation' }">Ask Elevation</button></td>
+                <td><button @click="somAskElevation" :disabled="!isSom || !canSomAskElevation()" :class="{ actionFail: failedSomAction === 'askElevation' }">Request GS elevation status</button></td>
                 <td :class="classForStep(2, elevationAskedBySom)">{{ statusForStep(2, elevationAskedBySom) }}</td>
               </tr>
 
@@ -3121,7 +3121,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM</td>
                 <td>Confirm elevation is sufficient for link operations.</td>
                 <td>Elevation/<strong>GEL005</strong> ≥ 5°</td>
-                <td><button @click="somConfirmElevation" :disabled="!isSom || !canSomConfirmElevation()" :class="{ actionFail: failedSomAction === 'confirmElevation' }">Confirm Elevation</button></td>
+                <td><button @click="somConfirmElevation" :disabled="!isSom || !canSomConfirmElevation()" :class="{ actionFail: failedSomAction === 'confirmElevation' }">Confirm acquisition geometry</button></td>
                 <td :class="classForStep(3, elevationConfirmedBySom)">{{ statusForStep(3, elevationConfirmedBySom) }}</td>
               </tr>
 
@@ -3133,16 +3133,16 @@ return "FAILED - UNKNOWN COMMAND";
   <div><strong>GSE001</strong> → NOMINAL & <strong>GBL092</strong> → Good</div>
   <div>If not, filtering is required</div>
 </td>
-                <td><button @click="somAskSignalQualityBeforeFilter" :disabled="!isSom || !canAskSignalQualityBeforeFilter()" :class="{ actionFail: failedSomAction === 'askSignalQuality' }">Ask Signal Quality</button></td>
+                <td><button @click="somAskSignalQualityBeforeFilter" :disabled="!isSom || !canAskSignalQualityBeforeFilter()" :class="{ actionFail: failedSomAction === 'askSignalQuality' }">Verify downlink signal quality</button></td>
                 <td :class="classForStep(4, signalQualityReportedBySom)">{{ statusForStep(4, signalQualityReportedBySom) }}</td>
               </tr>
 
               <tr>
                 <td>5</td>
                 <td>SOM → SPACON</td>
-                <td>Command SPACON to select <strong>GS1 / GSE001</strong> and execute Filter Signal.</td>
+                <td>Command SPACON to select GS1 <strong>GSE001</strong> and execute Filter Signal.</td>
                 <td>Execution time ~ 10 [s]</td>
-                <td><button @click="somRequestSignalFilter" :disabled="!isSom || !canSomRequestSignalFilter()" :class="{ actionFail: failedSomAction === 'requestSignalFilter' }">Request SPACON: Filter Signal</button></td>
+                <td><button @click="somRequestSignalFilter" :disabled="!isSom || !canSomRequestSignalFilter()" :class="{ actionFail: failedSomAction === 'requestSignalFilter' }">configure receiver chain</button></td>
                 <td :class="signalFilterRequestedBySom && !signalFiltered ? 'status-progress' : classForStep(5, signalFiltered)">{{ signalFiltered ? "DONE" : signalFilterRequestedBySom ? "SPACON REQUIRED" : statusForStep(5, signalFiltered) }}</td>
               </tr>
 
@@ -3151,7 +3151,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SOE1</td>
                 <td>Ask SOE1 to open Ground Station panel and verify <strong>GSE001</strong> and <strong>GBL092</strong> signal filtering result.</td>
                 <td><strong>GBL092</strong> → GOOD & <strong>GSE001</strong> → NOMINAL</td>
-                <td><button @click="somVerifySignal" :disabled="!isSom || !canVerifySignal()" :class="{ actionFail: failedSomAction === 'verifySignal' }">Verify Signal</button></td>
+                <td><button @click="somVerifySignal" :disabled="!isSom || !canVerifySignal()" :class="{ actionFail: failedSomAction === 'verifySignal' }">Confirm TM lock</button></td>
                 <td :class="classForStep(6, signalVerifiedBySom)">{{ statusForStep(6, signalVerifiedBySom) }}</td>
               </tr>
 
@@ -3160,7 +3160,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SOE2</td>
                 <td>Ask SOE2 to open Memory panel and report <strong>MEM221</strong> memory usage before dump.</td>
                 <td>Nominal → <strong>Memory Used ≤ 10%</strong> </td>
-                <td><button @click="somAskMemoryBeforeDump" :disabled="!isSom || !canAskMemoryBeforeDump()" :class="{ actionFail: failedSomAction === 'askMemoryBefore' }">Ask Memory</button></td>
+                <td><button @click="somAskMemoryBeforeDump" :disabled="!isSom || !canAskMemoryBeforeDump()" :class="{ actionFail: failedSomAction === 'askMemoryBefore' }">Request MMU status</button></td>
                 <td :class="classForStep(7, memoryAskedBeforeDumpBySom)">{{ statusForStep(7, memoryAskedBeforeDumpBySom) }}</td>
               </tr>
 
@@ -3169,7 +3169,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM</td>
                 <td>Authorize memory dump if memory is occupied.</td>
                 <td><strong>MEM221</strong> &gt; 50% → Dump required</td>
-                <td><button @click="somAuthorizeMemoryDump" :disabled="!isSom || !canAuthorizeMemoryDump()" :class="{ actionFail: failedSomAction === 'authorizeMemoryDump' }">Authorize Dump</button></td>
+                <td><button @click="somAuthorizeMemoryDump" :disabled="!isSom || !canAuthorizeMemoryDump()" :class="{ actionFail: failedSomAction === 'authorizeMemoryDump' }">Authorize payload memory dump</button></td>
                 <td :class="classForStep(8, memoryDumpAuthorizedBySom)">{{ statusForStep(8, memoryDumpAuthorizedBySom) }}</td>
               </tr>
 
@@ -3178,7 +3178,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>MEM221</strong> and execute Dump Payload Memory.</td>
                 <td>Execution time ~ 15 [s]</td>
-                <td><button @click="somRequestMemoryDumpBySpacon" :disabled="!isSom || !canSomRequestMemoryDump()" :class="{ actionFail: failedSomAction === 'requestMemoryDump' }">Request SPACON: Dump Memory</button></td>
+                <td><button @click="somRequestMemoryDumpBySpacon" :disabled="!isSom || !canSomRequestMemoryDump()" :class="{ actionFail: failedSomAction === 'requestMemoryDump' }">Execute MMU dump</button></td>
                 <td :class="memoryDumpStarted && !memoryDumpComplete ? 'status-progress' : memoryDumpRequestedBySom && !memoryDumpComplete ? 'status-progress' : classForStep(9, memoryDumpComplete)">{{ memoryDumpComplete ? "DONE" : memoryDumpStarted ? "IN PROGRESS" : memoryDumpRequestedBySom ? "SPACON REQUIRED" : statusForStep(9, memoryDumpComplete) }}</td>
               </tr>
 
@@ -3238,7 +3238,7 @@ return "FAILED - UNKNOWN COMMAND";
       :disabled="!isSom || !canAskPayloadInstrumentMode()"
       :class="{ actionFail: failedSomAction === 'askPayloadInstrumentMode' }"
     >
-      	Safe Instrument Mode
+      	Verify payload safe mode
     </button>
   </td>
   <td :class="classForStep(11, payloadInstrumentModeReportedBySom)">
@@ -3269,7 +3269,7 @@ return "FAILED - UNKNOWN COMMAND";
       :disabled="!isSom || !canSomAskEps()"
       :class="{ actionFail: failedSomAction === 'askEps' }"
     >
-      {{ isScenario2 ? "Ask / Evaluate Batteries" : "Ask EPS" }}
+      {{ isScenario2 ? "Evaluate battery state-of-charge" : "Request EPS telemetry status" }}
     </button>
   </td>
 
@@ -3283,7 +3283,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM</td>
                 <td>Request power reduction if EPS is not nominal.</td>
                 <td><strong>EPT014</strong> &gt; 85.0°[C] → Immediate Mitigation</td>
-                <td><button @click="somRequestMitigation" :disabled="!isSom || !canSomRequestMitigation()" :class="{ actionFail: failedSomAction === 'requestMitigation' }">Request Mitigation</button></td>
+                <td><button @click="somRequestMitigation" :disabled="!isSom || !canSomRequestMitigation()" :class="{ actionFail: failedSomAction === 'requestMitigation' }">Request thermal Mitigation</button></td>
                 <td :class="classForStep(13, epsMitigationRequestedBySom)">{{ statusForStep(13, epsMitigationRequestedBySom) }}</td>
               </tr>
 
@@ -3292,7 +3292,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>EPT014</strong> and execute Reduce Payload Power.</td>
                 <td>Execution time ~ 15 [s]</td>
-                <td><button @click="somRequestPayloadReductionCommand" :disabled="!isSom || !canSomRequestPayloadReductionCommand()" :class="{ actionFail: failedSomAction === 'requestPayloadReduction' }">Request EPT014</button></td>
+                <td><button @click="somRequestPayloadReductionCommand" :disabled="!isSom || !canSomRequestPayloadReductionCommand()" :class="{ actionFail: failedSomAction === 'requestPayloadReduction' }">Execute load shedding</button></td>
                 <td :class="powerReductionInProgress ? 'status-progress' : payloadReductionCommandRequestedBySom && !powerReducedBySpacon ? 'status-progress' : classForStep(14, powerReducedBySpacon)">{{ powerReductionInProgress ? "IN PROGRESS" : powerReducedBySpacon ? "DONE" : payloadReductionCommandRequestedBySom ? "SPACON REQUIRED" : statusForStep(14, powerReducedBySpacon) }}</td>
               </tr>
 
@@ -3304,7 +3304,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div><strong>EPT014</strong> &lt; 75.0°[C]</div>
                 <div><strong>NET118</strong> &lt 1160 [W]</div>
                 </td>
-                <td><button @click="somAskEpsAfterMitigation" :disabled="!isSom || !canSomAskEpsAfterMitigation()" :class="{ actionFail: failedSomAction === 'askEpsAfter' }">Ask EPS Again</button></td>
+                <td><button @click="somAskEpsAfterMitigation" :disabled="!isSom || !canSomAskEpsAfterMitigation()" :class="{ actionFail: failedSomAction === 'askEpsAfter' }">Request post-mitigation EPS telemetry</button></td>
                 <td :class="classForStep(15, epsAskedAfterMitigationBySom)">{{ statusForStep(15, epsAskedAfterMitigationBySom) }}</td>
               </tr>
 
@@ -3316,7 +3316,7 @@ return "FAILED - UNKNOWN COMMAND";
   <div><strong>EPT014</strong> → 70-75.0°[C]</div>
   <div><strong>NET118</strong> → 1100-1140[W]</div>
 </td>
-                <td><button @click="somConfirmEpsNominal" :disabled="!isSom || !canSomConfirmEps()" :class="{ actionFail: failedSomAction === 'confirmEps' }">Confirm EPS</button></td>
+                <td><button @click="somConfirmEpsNominal" :disabled="!isSom || !canSomConfirmEps()" :class="{ actionFail: failedSomAction === 'confirmEps' }">Confirm EPS parameters nominal</button></td>
                 <td :class="classForStep(16, epsConfirmedBySom)">{{ statusForStep(16, epsConfirmedBySom) }}</td>
               </tr>
 
@@ -3328,7 +3328,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div>Execution time ~ 15 [s]</div>
                 <div><strong>NET118</strong> ~ 1160 [W]</div>
                 </td>
-                <td><button @click="somRequestNormalPayloadPowerIncrease" :disabled="!isSom || !canSomRequestNormalPayloadPowerIncrease()" :class="{ actionFail: failedSomAction === 'requestNormalPowerIncrease' }">Request SPACON: Increase Power</button></td>
+                <td><button @click="somRequestNormalPayloadPowerIncrease" :disabled="!isSom || !canSomRequestNormalPayloadPowerIncrease()" :class="{ actionFail: failedSomAction === 'requestNormalPowerIncrease' }">Restore payload power for imaging</button></td>
                 <td :class="powerIncreaseInProgress ? 'status-progress' : normalPayloadPowerIncreaseRequestedBySom && !payloadPowerRaised ? 'status-progress' : classForStep(17, payloadPowerRaised)">{{ payloadPowerRaised ? "DONE" : powerIncreaseInProgress ? "IN PROGRESS" : normalPayloadPowerIncreaseRequestedBySom ? "SPACON REQUIRED" : statusForStep(17, payloadPowerRaised) }}</td>
               </tr>
 
@@ -3337,7 +3337,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>CAM000</strong> and execute Configure Camera.</td>
                 <td><strong>CAUTION:</strong> EPS temperature may rise rapidly after increasing payload power.</td>
-                <td><button @click="somRequestNormalCameraConfiguration" :disabled="!isSom || !canSomRequestNormalCameraConfiguration()" :class="{ actionFail: failedSomAction === 'requestNormalCameraConfig' }">Request SPACON: Configure Camera</button></td>
+                <td><button @click="somRequestNormalCameraConfiguration" :disabled="!isSom || !canSomRequestNormalCameraConfiguration()" :class="{ actionFail: failedSomAction === 'requestNormalCameraConfig' }">Configure payload imaging mode</button></td>
                 <td :class="normalCameraConfigurationRequestedBySom && !cameraConfigured ? 'status-progress' : classForStep(18, cameraConfigured)">{{ cameraConfigured ? "DONE" : normalCameraConfigurationRequestedBySom ? "SPACON REQUIRED" : statusForStep(18, cameraConfigured) }}</td>
               </tr>
 
@@ -3355,7 +3355,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>IMG901</strong> and execute Take Image inside imaging window.</td>
                 <td>Imaging: T+15:00 → T+16:00</td>
-                <td><button @click="somRequestNormalImageCapture" :disabled="!isSom || !canSomRequestNormalImageCapture()" :class="{ actionFail: failedSomAction === 'requestNormalImageCapture' }">Request SPACON: Take Image</button></td>
+                <td><button @click="somRequestNormalImageCapture" :disabled="!isSom || !canSomRequestNormalImageCapture()" :class="{ actionFail: failedSomAction === 'requestNormalImageCapture' }">Execute image acquisition</button></td>
                 <td :class="imageTaken ? 'status-good' : normalImageCaptureRequestedBySom ? 'status-progress' : currentProcedureStep === 20 ? 'status-warning' : 'status-empty'">
                   {{ imageTaken ? "DONE" : normalImageCaptureRequestedBySom ? "SPACON REQUIRED" : currentProcedureStep === 20 ? "CURRENT" : "PENDING" }}
                 </td>
@@ -3366,7 +3366,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>STB901</strong> and execute Spacecraft Standby Mode to save power.</td>
                 <td>S/C standby active</td>
-                <td><button @click="somRequestNormalSpacecraftStandby" :disabled="!isSom || !canSomRequestNormalSpacecraftStandby()" :class="{ actionFail: failedSomAction === 'requestNormalStandby' }">Request SPACON: Standby Mode</button></td>
+                <td><button @click="somRequestNormalSpacecraftStandby" :disabled="!isSom || !canSomRequestNormalSpacecraftStandby()" :class="{ actionFail: failedSomAction === 'requestNormalStandby' }">Command spacecraft to standby</button></td>
                 <td :class="spacecraftStandbyRequestedBySom && !spacecraftStandbyActive ? 'status-progress' : classForStep(21, spacecraftStandbyActive)">{{ spacecraftStandbyActive ? "DONE" : spacecraftStandbyRequestedBySom ? "SPACON REQUIRED" : statusForStep(21, spacecraftStandbyActive) }}</td>
               </tr>
 
@@ -3378,7 +3378,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div>Equalize battery charge values to restore power margin. Keep emergency status active until verification confirms recovery</div>
                 <div>Execution time ~ 20 [s]</div>
                 </td>
-                <td><button @click="scenario2RequestBatteryEqualization" :disabled="!isSom || !canScenario2RequestBatteryEqualization()" :class="{ actionFail: failedSomAction === 'requestBatteryEqualization' }">Request BAT330</button></td>
+                <td><button @click="scenario2RequestBatteryEqualization" :disabled="!isSom || !canScenario2RequestBatteryEqualization()" :class="{ actionFail: failedSomAction === 'requestBatteryEqualization' }">Battery load redistribution</button></td>
                 <td :class="batteryEqualizationInProgress || (batteryEqualizationRequestedBySom && !batteryEqualizationComplete) ? 'status-progress' : classForStep(13, batteryEqualizationComplete)">{{ batteryEqualizationComplete ? "DONE" : batteryEqualizationInProgress ? "IN PROGRESS" : batteryEqualizationRequestedBySom ? "SPACON REQUIRED" : statusForStep(13, batteryEqualizationComplete) }}</td>
               </tr>
 
@@ -3391,7 +3391,7 @@ return "FAILED - UNKNOWN COMMAND";
   <div><strong>BCH097</strong> ~ 34.7%</div>
   <div><strong>BCH098</strong> ~ 34.7%</div>
 </td>
-                <td><button @click="scenario2RecheckBatteries" :disabled="!isSom || !canScenario2RecheckBatteries()" :class="{ actionFail: failedSomAction === 'recheckBatteries' }">Verify Batteries</button></td>
+                <td><button @click="scenario2RecheckBatteries" :disabled="!isSom || !canScenario2RecheckBatteries()" :class="{ actionFail: failedSomAction === 'recheckBatteries' }">Verify battery recovery status</button></td>
                 <td :class="classForStep(14, batteryRecheckedBySom)">{{ statusForStep(14, batteryRecheckedBySom) }}</td>
               </tr>
 
@@ -3412,7 +3412,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>PSM001</strong> and execute Enter Power Saving Mode.</td>
                 <td>Execution time ~ 15 [s]</td>
-                <td><button @click="scenario2RequestPowerSaving" :disabled="!isSom || !canScenario2RequestPowerSaving()" :class="{ actionFail: failedSomAction === 'requestPowerSaving' }">Request PSM001</button></td>
+                <td><button @click="scenario2RequestPowerSaving" :disabled="!isSom || !canScenario2RequestPowerSaving()" :class="{ actionFail: failedSomAction === 'requestPowerSaving' }">Enter power-saving configuration</button></td>
                 <td :class="powerSavingModeInProgress ? 'status-progress' : powerSavingRequestedBySom && !powerSavingModeActive ? 'status-progress' : classForStep(16, powerSavingModeActive)">{{ powerSavingModeActive ? "DONE" : powerSavingModeInProgress ? "IN PROGRESS" : powerSavingRequestedBySom ? "SPACON REQUIRED" : statusForStep(16, powerSavingModeActive) }}</td>
               </tr>
 
@@ -3424,7 +3424,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div>If power → <strong>NOMINAL</strong> & Battery values > <strong>20%</strong></div>
                 <div>verify recovery. Battery alert downgrades from <strong>EMERGENCY SITUATION</strong> to <strong>WARNING</strong></div>
                 </td>
-                <td><button @click="scenario2VerifyPowerSaving" :disabled="!isSom || !canScenario2VerifyPowerSaving()" :class="{ actionFail: failedSomAction === 'verifyPowerSaving' }">Verify Power</button></td>
+                <td><button @click="scenario2VerifyPowerSaving" :disabled="!isSom || !canScenario2VerifyPowerSaving()" :class="{ actionFail: failedSomAction === 'verifyPowerSaving' }">Confirm low-power configuration active</button></td>
                 <td :class="classForStep(17, powerStatusVerifiedBySom)">{{ statusForStep(17, powerStatusVerifiedBySom) }}</td>
               </tr>
 
@@ -3437,37 +3437,37 @@ return "FAILED - UNKNOWN COMMAND";
                 <div><strong>NET118</strong> ≥ 1000 [W]</div>
                 <div>If not nominal, request mitigation</div>
                 </td>
-                <td><button @click="scenario2AskThermalValues" :disabled="!isSom || !canScenario2AskThermalValues()" :class="{ actionFail: failedSomAction === 'askThermalValues' }">Ask Thermal</button></td>
+                <td><button @click="scenario2AskThermalValues" :disabled="!isSom || !canScenario2AskThermalValues()" :class="{ actionFail: failedSomAction === 'askThermalValues' }">Request thermal telemetry</button></td>
                 <td :class="classForStep(18, thermalValuesAskedBySom)">{{ statusForStep(18, thermalValuesAskedBySom) }}</td>
               </tr>
 
               <tr v-if="isScenario2 && scenario2NewProcedureImported">
                 <td>19</td>
                 <td>SOM → SOE2</td>
-                <td>Ask SOE2 to verify signal quality with <strong>GS1 / GSE001</strong>.</td>
+                <td>Ask SOE2 to verify signal quality with GS1 <strong>GSE001</strong>.</td>
                 <td>If Signal quality is BAD or GS1 link lost → Establish U/L with GS2</td>
-                <td><button @click="scenario2VerifyGs1Signal" :disabled="!isSom || !canScenario2VerifyGs1Signal()" :class="{ actionFail: failedSomAction === 'verifyGs1Signal' }">Verify GS1 Signal</button></td>
+                <td><button @click="scenario2VerifyGs1Signal" :disabled="!isSom || !canScenario2VerifyGs1Signal()" :class="{ actionFail: failedSomAction === 'verifyGs1Signal' }">Confirm GS1 loss of signal</button></td>
                 <td :class="classForStep(19, scenario2Gs1SignalCheckedBySom)">{{ statusForStep(19, scenario2Gs1SignalCheckedBySom) }}</td>
               </tr>
 
               <tr v-if="isScenario2 && scenario2NewProcedureImported">
                 <td>20</td>
                 <td>SOM → SOE1</td>
-                <td>Wait for acceptable elevation with <strong>GS2 / GEL005</strong>.</td>
+                <td>Wait for acceptable elevation with GS2 <strong>GEL005</strong>.</td>
                 <td>GS2 elevation ≥ 5.0°</td>
-                <td><button @click="scenario2ConfirmGs2Elevation" :disabled="!isSom || !canScenario2ConfirmGs2Elevation()" :class="{ actionFail: failedSomAction === 'confirmGs2Elevation' }">Confirm GS2 Elevation</button></td>
+                <td><button @click="scenario2ConfirmGs2Elevation" :disabled="!isSom || !canScenario2ConfirmGs2Elevation()" :class="{ actionFail: failedSomAction === 'confirmGs2Elevation' }">Wait for GS2 acquisition window</button></td>
                 <td :class="classForStep(20, scenario2Gs2ElevationConfirmedBySom)">{{ statusForStep(20, scenario2Gs2ElevationConfirmedBySom) }}</td>
               </tr>
 
               <tr v-if="isScenario2 && scenario2NewProcedureImported">
                 <td>21</td>
                 <td>SOM → SOE1</td>
-                <td>Ask SOE1 to report <strong>GS2 / GS2SIG</strong> & <strong>GBL092</strong>.</td>
+                <td>Ask SOE1 to report GS2 <strong>GS2SIG</strong> & <strong>GBL092</strong>.</td>
                 <td>
                 <div><strong>GS2SIG</strong> → NOMINAL & <strong>GBL092</strong> → Good </div>
                 <div>If not, filtering is required</div>
                 </td>
-                <td><button @click="scenario2AskGs2SignalQuality" :disabled="!isSom || !canScenario2AskGs2SignalQuality()" :class="{ actionFail: failedSomAction === 'askGs2SignalQuality' }">Ask GS2 Signal Quality</button></td>
+                <td><button @click="scenario2AskGs2SignalQuality" :disabled="!isSom || !canScenario2AskGs2SignalQuality()" :class="{ actionFail: failedSomAction === 'askGs2SignalQuality' }">Verify GS2 downlink acquisition</button></td>
                 <td :class="classForStep(21, scenario2Gs2SignalQualityCheckedBySom)">{{ statusForStep(21, scenario2Gs2SignalQualityCheckedBySom) }}</td>
               </tr>
 
@@ -3476,7 +3476,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>GSE001</strong> and execute Filter Signal for GS2.</td>
                 <td>Execution time ~ 10 [s]</td>
-                <td><button @click="scenario2RequestGs2SignalFilter" :disabled="!isSom || !canScenario2RequestGs2SignalFilter()" :class="{ actionFail: failedSomAction === 'requestGs2Filter' }">Request SPACON: Filter Signal</button></td>
+                <td><button @click="scenario2RequestGs2SignalFilter" :disabled="!isSom || !canScenario2RequestGs2SignalFilter()" :class="{ actionFail: failedSomAction === 'requestGs2Filter' }">Configure GS2 receiver chain</button></td>
                 <td :class="scenario2Gs2SignalFilterRequestedBySom && !scenario2Gs2SignalFiltered ? 'status-progress' : classForStep(22, scenario2Gs2SignalFiltered)">{{ scenario2Gs2SignalFiltered ? "DONE" : scenario2Gs2SignalFilterRequestedBySom ? "SPACON REQUIRED" : statusForStep(22, scenario2Gs2SignalFiltered) }}</td>
               </tr>
 
@@ -3485,7 +3485,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM</td>
                 <td>Compare SOE1 thermal report with the criteria. If temperature is high, request SPACON thermal mitigation.</td>
                 <td><strong>EPT014</strong> → 70.0–75.0 °[C] → Nominal</td>
-                <td><button @click="somRequestMitigation" :disabled="!isSom || !canSomRequestMitigation()" :class="{ actionFail: failedSomAction === 'requestMitigation' }">Request Mitigation</button></td>
+                <td><button @click="somRequestMitigation" :disabled="!isSom || !canSomRequestMitigation()" :class="{ actionFail: failedSomAction === 'requestMitigation' }">Request thermal Mitigation</button></td>
                 <td :class="classForStep(23, epsMitigationRequestedBySom)">{{ statusForStep(23, epsMitigationRequestedBySom) }}</td>
               </tr>
 
@@ -3494,7 +3494,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>EPT014</strong> and execute Reduce Payload Power.</td>
                 <td>Execution time ~ 15 [s]</td>
-                <td><button @click="somRequestPayloadReductionCommand" :disabled="!isSom || !canSomRequestPayloadReductionCommand()" :class="{ actionFail: failedSomAction === 'requestPayloadReduction' }">Request EPT014</button></td>
+                <td><button @click="somRequestPayloadReductionCommand" :disabled="!isSom || !canSomRequestPayloadReductionCommand()" :class="{ actionFail: failedSomAction === 'requestPayloadReduction' }">Perform payload load shedding</button></td>
                 <td :class="powerReductionInProgress ? 'status-progress' : payloadReductionCommandRequestedBySom && !powerReducedBySpacon ? 'status-progress' : classForStep(24, powerReducedBySpacon)">{{ powerReductionInProgress ? "IN PROGRESS" : powerReducedBySpacon ? "DONE" : payloadReductionCommandRequestedBySom ? "SPACON REQUIRED" : statusForStep(24, powerReducedBySpacon) }}</td>
               </tr>
 
@@ -3503,7 +3503,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SOE2</td>
                 <td>Ask SOE2 to open EPS panel and report <strong>EPT014</strong> temperature after mitigation.</td>
                 <td>Temperature should be in Minimum</td>
-                <td><button @click="somAskEpsAfterMitigation" :disabled="!isSom || !canSomAskEpsAfterMitigation()" :class="{ actionFail: failedSomAction === 'askEpsAfter' }">Ask EPS Again</button></td>
+                <td><button @click="somAskEpsAfterMitigation" :disabled="!isSom || !canSomAskEpsAfterMitigation()" :class="{ actionFail: failedSomAction === 'askEpsAfter' }">Request post-mitigation thermal telemetry</button></td>
                 <td :class="classForStep(25, epsAskedAfterMitigationBySom)">{{ statusForStep(25, epsAskedAfterMitigationBySom) }}</td>
               </tr>
 
@@ -3515,7 +3515,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div><strong>CAUTION:</strong> EPS temperature may rise after increasing payload power</div>
                 <div>Be sure <strong>EPT014</strong> does not change in a Minute</div>
                 </td>
-                <td><button @click="somConfirmEpsNominal" :disabled="!isSom || !canSomConfirmEps()" :class="{ actionFail: failedSomAction === 'confirmEps' }">Confirm EPS</button></td>
+                <td><button @click="somConfirmEpsNominal" :disabled="!isSom || !canSomConfirmEps()" :class="{ actionFail: failedSomAction === 'confirmEps' }">Confirm EPS and thermal parameters within limits</button></td>
                 <td :class="classForStep(26, epsConfirmedBySom)">{{ statusForStep(26, epsConfirmedBySom) }}</td>
               </tr>
 
@@ -3529,7 +3529,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div>~+0.01 °[C]/[s]</div>
                 <div>	Execution time ~ 15 [s]</div>
                 </td>
-                <td><button @click="scenario2RequestPayloadPowerIncrease" :disabled="!isSom || !canScenario2RequestPayloadPowerIncrease()" :class="{ actionFail: failedSomAction === 'requestPowerIncrease' }">Request SPACON: Increase Power</button></td>
+                <td><button @click="scenario2RequestPayloadPowerIncrease" :disabled="!isSom || !canScenario2RequestPayloadPowerIncrease()" :class="{ actionFail: failedSomAction === 'requestPowerIncrease' }">Restore payload power for imaging window</button></td>
                 <td :class="powerIncreaseInProgress || (payloadPowerIncreaseRequestedBySom && !payloadPowerRaised) ? 'status-progress' : classForStep(27, payloadPowerRaised)">{{ powerIncreaseInProgress ? "IN PROGRESS" : payloadPowerRaised ? "DONE" : payloadPowerIncreaseRequestedBySom ? "SPACON REQUIRED" : statusForStep(27, payloadPowerRaised) }}</td>
               </tr>
 
@@ -3541,7 +3541,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <div>Camera configured</div>
                 <div>Execution time ~ 5 [s]</div>
                 </td>
-                <td><button @click="scenario2RequestCameraConfiguration" :disabled="!isSom || !canScenario2RequestCameraConfiguration()" :class="{ actionFail: failedSomAction === 'requestCameraConfig' }">Request SPACON: Configure Camera</button></td>
+                <td><button @click="scenario2RequestCameraConfiguration" :disabled="!isSom || !canScenario2RequestCameraConfiguration()" :class="{ actionFail: failedSomAction === 'requestCameraConfig' }">Configure imaging payload</button></td>
                 <td :class="cameraConfigurationRequestedBySom && !cameraConfigured ? 'status-progress' : classForStep(28, cameraConfigured)">{{ cameraConfigured ? "DONE" : cameraConfigurationRequestedBySom ? "SPACON REQUIRED" : statusForStep(28, cameraConfigured) }}</td>
               </tr>
 
@@ -3562,7 +3562,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SOE2</td>
                 <td>Ask SOE2 to report thermal values <strong>EPT014</strong> & <strong>DCC208</strong> after payload power increase.</td>
                 <td>Temperature trend reported; slow rise expected after PWR740.</td>
-                <td><button @click="scenario2ReportPostPowerThermals" :disabled="!isSom || !canScenario2ReportPostPowerThermals()" :class="{ actionFail: failedSomAction === 'reportPostPowerThermals' }">Report Thermals</button></td>
+                <td><button @click="scenario2ReportPostPowerThermals" :disabled="!isSom || !canScenario2ReportPostPowerThermals()" :class="{ actionFail: failedSomAction === 'reportPostPowerThermals' }">Report post-restoration thermal trend</button></td>
                 <td :class="classForStep(30, postPowerThermalReportedBySoe)">{{ statusForStep(30, postPowerThermalReportedBySoe) }}</td>
               </tr>
 
@@ -3571,7 +3571,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>IMG901</strong> and execute Take Image.</td>
                 <td>Imaging Window: T+30:00 → T+30:30</td>
-                <td><button @click="scenario2RequestImageCapture" :disabled="!isSom || !canScenario2RequestImageCapture()" :class="{ actionFail: failedSomAction === 'requestImageCapture' }">Request SPACON: Take Image</button></td>
+                <td><button @click="scenario2RequestImageCapture" :disabled="!isSom || !canScenario2RequestImageCapture()" :class="{ actionFail: failedSomAction === 'requestImageCapture' }">Execute image acquisition during imaging window</button></td>
                 <td :class="imageCaptureRequestedBySom && !imageTaken ? 'status-progress' : classForStep(31, imageTaken)">{{ imageTaken ? "DONE" : imageCaptureRequestedBySom ? "SPACON REQUIRED" : statusForStep(31, imageTaken) }}</td>
               </tr>
 
@@ -3580,7 +3580,7 @@ return "FAILED - UNKNOWN COMMAND";
                 <td>SOM → SPACON</td>
                 <td>Command SPACON to select <strong>STB901</strong> and execute Spacecraft Standby Mode to save power.</td>
                 <td>S/C standby active</td>
-                <td><button @click="scenario2RequestSpacecraftStandby" :disabled="!isSom || !canScenario2RequestSpacecraftStandby()" :class="{ actionFail: failedSomAction === 'requestStandby' }">Request SPACON: Standby Mode</button></td>
+                <td><button @click="scenario2RequestSpacecraftStandby" :disabled="!isSom || !canScenario2RequestSpacecraftStandby()" :class="{ actionFail: failedSomAction === 'requestStandby' }">Configure spacecraft standby</button></td>
                 <td :class="spacecraftStandbyRequestedBySom && !spacecraftStandbyActive ? 'status-progress' : classForStep(32, spacecraftStandbyActive)">{{ spacecraftStandbyActive ? "DONE" : spacecraftStandbyRequestedBySom ? "SPACON REQUIRED" : statusForStep(32, spacecraftStandbyActive) }}</td>
               </tr>
             </table>
