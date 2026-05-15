@@ -83,7 +83,9 @@ body {
   min-width: 0;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: 'Rajdhani', Arial, sans-serif;
   color: #58a6ff;
   font-weight: 600;
@@ -91,9 +93,16 @@ h1, h2, h3 {
   text-transform: uppercase;
 }
 
-h1 { font-size: 26px; }
-h2 { font-size: 19px; }
-h3 { font-size: 17px; margin-bottom: 10px; }
+h1 {
+  font-size: 26px;
+}
+h2 {
+  font-size: 19px;
+}
+h3 {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
 
 button {
   font-family: 'Rajdhani', Arial, sans-serif;
@@ -165,7 +174,9 @@ button.actionFail {
   margin-top: 18px;
 }
 
-.full-width { width: 100%; }
+.full-width {
+  width: 100%;
+}
 
 .scenario-screen {
   position: relative;
@@ -184,7 +195,7 @@ button.actionFail {
   width: 100%;
   height: 100%;
   object-fit: cover;
-   object-position: top center;
+  object-position: top center;
   z-index: 0;
 }
 
@@ -243,7 +254,9 @@ table {
   font-size: 12px;
 }
 
-table, th, td {
+table,
+th,
+td {
   border: 1px solid #2f3b52;
 }
 
@@ -318,27 +331,51 @@ td:first-child {
 }
 
 @keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.2; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes blink-warning {
-  0% { opacity: 1; }
-  50% { opacity: 0.35; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes blink-bad {
-  0% { opacity: 1; }
-  50% { opacity: 0.15; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes blink-progress {
-  0% { opacity: 1; }
-  50% { opacity: 0.25; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .telemetry-table td:nth-child(3) {
@@ -426,7 +463,6 @@ td:first-child {
   cursor: pointer;
 }
 
-
 .spacon-execution-buttons button.armed {
   background: #15803d;
   border-color: #22c55e;
@@ -460,7 +496,6 @@ td:first-child {
   font-size: 12px;
   letter-spacing: 0.4px;
 }
-
 
 .gs-two-column {
   display: grid;
@@ -591,7 +626,6 @@ td:first-child {
   width: 100%;
 }
 
-
 .emergency-banner {
   position: sticky;
   top: 48px;
@@ -607,7 +641,6 @@ td:first-child {
   text-align: center;
   box-shadow: 0 0 18px rgba(239, 68, 68, 0.22);
 }
-
 
 .emergency-banner.blink-warning {
   background: #171306;
@@ -627,7 +660,6 @@ td:first-child {
 .emergency-banner.blink-warning {
   animation: blink-warning 1s infinite;
 }
-
 
 .confirm-modal-overlay {
   position: fixed;
@@ -706,7 +738,6 @@ td:first-child {
   top: 92px;
 }
 
-
 /* Procedure table fit refinements */
 .procedure-box {
   width: 100%;
@@ -720,12 +751,24 @@ td:first-child {
   table-layout: fixed;
 }
 
-.procedure-table .col-step { width: 48px; }
-.procedure-table .col-role { width: 92px; }
-.procedure-table .col-action { width: 38%; }
-.procedure-table .col-criteria { width: 28%; }
-.procedure-table .col-som { width: 170px; }
-.procedure-table .col-status { width: 76px; }
+.procedure-table .col-step {
+  width: 48px;
+}
+.procedure-table .col-role {
+  width: 92px;
+}
+.procedure-table .col-action {
+  width: 38%;
+}
+.procedure-table .col-criteria {
+  width: 28%;
+}
+.procedure-table .col-som {
+  width: 170px;
+}
+.procedure-table .col-status {
+  width: 76px;
+}
 
 .procedure-table button {
   width: 100%;
