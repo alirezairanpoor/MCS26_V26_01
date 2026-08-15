@@ -4157,9 +4157,10 @@ gs1LossStartSecond.value = null;
 <button @click="activePanel = 'AOCS'">AOCS</button>
 <button @click="activePanel = 'TCS'">TCS</button>
 <button @click="activePanel = 'Payload'">Payload</button>
-      <button @click="activePanel = 'IMAGE'">Captured Image</button>
+      
       <button @click="activePanel = 'CDH'">Command & Data Handling</button>
       <button @click="activePanel = 'SPACON'">SPACON</button>
+      <button @click="activePanel = 'IMAGE'">Captured Image</button>
       <button @click="requestBackToScenarioSelection">Back to Scenarios</button>
     </div>
 
