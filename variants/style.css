@@ -1,12 +1,13 @@
-
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
 body {
   margin: 0;
   background: #0b0f14;
   color: #e6edf3;
-  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-font-size: 14px;
-letter-spacing: 0;
+  font-family: 'Rajdhani', Arial, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.35px;
   overflow-x: hidden;
 }
 
@@ -42,10 +43,10 @@ letter-spacing: 0;
   border: 1px solid #2f3b52;
   cursor: pointer;
   text-align: left;
-  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-font-size: 13px;
-font-weight: 500;
-letter-spacing: 0;
+  font-family: 'Rajdhani', Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
 }
 
 .sidebar button:hover,
@@ -85,10 +86,10 @@ letter-spacing: 0;
 h1,
 h2,
 h3 {
-  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  font-family: 'Rajdhani', Arial, sans-serif;
   color: #58a6ff;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
@@ -104,11 +105,11 @@ h3 {
 }
 
 button {
-  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-  font-size: 13px;
+  font-family: 'Rajdhani', Arial, sans-serif;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0;
-  border-radius: 2px;
+  letter-spacing: 0.4px;
+  border-radius: 3px;
 }
 
 button.selected {
@@ -230,14 +231,13 @@ button.actionFail {
 }
 
 .scenario-screen button {
-  width: 380px;
+  width: 320px;
   padding: 14px;
   background: rgba(24, 34, 51, 0.88);
   color: #e6edf3;
   border: 1px solid #2f3b52;
   cursor: pointer;
   font-size: 16px;
-  white-space: nowrap;
 }
 
 .scenario-screen button:disabled {
@@ -250,7 +250,7 @@ table {
   width: 100%;
   max-width: 100%;
   table-layout: fixed;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 12px;
 }
 
@@ -279,7 +279,7 @@ td {
 }
 
 td:first-child {
-  letter-spacing: 0;
+  letter-spacing: 1px;
   color: #e5e7eb;
 }
 
@@ -379,13 +379,13 @@ td:first-child {
 }
 
 .telemetry-table td:nth-child(3) {
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
 }
 
 .procedure-table strong {
   color: #7dd3fc;
-  font-family: Consolas, "Courier New", monospace;
-  letter-spacing: 0;
+  font-family: 'Share Tech Mono', Consolas, monospace;
+  letter-spacing: 0.8px;
 }
 
 .spacon-hint {
@@ -423,7 +423,7 @@ td:first-child {
   color: #e6edf3;
   border: 1px solid #2f3b52;
   cursor: pointer;
- font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 12px;
   letter-spacing: 0.8px;
   text-align: center;
@@ -492,7 +492,7 @@ td:first-child {
 }
 
 .tm-log-table td:nth-child(2) {
-font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 12px;
   letter-spacing: 0.4px;
 }
@@ -542,7 +542,7 @@ font-family: Consolas, "Courier New", monospace;
 
 .emergency-header p {
   margin: 4px 0 0;
- font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   color: #fca5a5;
 }
 
@@ -614,7 +614,7 @@ font-family: Consolas, "Courier New", monospace;
 }
 
 .ticket-box p {
-font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   color: #e5e7eb;
 }
 
@@ -635,7 +635,7 @@ font-family: Consolas, "Courier New", monospace;
   background: #160f12;
   border: 1px solid #ef4444;
   color: #fecaca;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 13px;
   letter-spacing: 0.8px;
   text-align: center;
@@ -925,7 +925,7 @@ font-family: Consolas, "Courier New", monospace;
 
 .gnc-waiting-title {
   color: #facc15;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 1.4px;
@@ -938,7 +938,7 @@ font-family: Consolas, "Courier New", monospace;
 
 .gnc-waiting-subtitle {
   color: rgba(255, 255, 255, 0.72);
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 12px;
   letter-spacing: 0.8px;
   text-align: center;
@@ -1074,7 +1074,7 @@ font-family: Consolas, "Courier New", monospace;
   border: 1px solid rgba(239, 68, 68, 0.35);
   background: rgba(2, 6, 12, 0.35);
   color: #e5e7eb;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   line-height: 1.45;
   letter-spacing: 0.6px;
 }
@@ -1140,7 +1140,7 @@ font-family: Consolas, "Courier New", monospace;
   border: 1px solid #2f3b52;
   border-radius: 3px;
   outline: none;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 12px;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -1192,7 +1192,7 @@ font-family: Consolas, "Courier New", monospace;
   background: #121a2a;
   border-bottom: 1px solid #2f3b52;
   color: #7dd3fc;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.7px;
@@ -1220,7 +1220,7 @@ font-family: Consolas, "Courier New", monospace;
   color: #dbeafe;
   border: 1px solid #2f3b52;
   cursor: pointer;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.35px;
@@ -1265,7 +1265,7 @@ font-family: Consolas, "Courier New", monospace;
   border: 1px dashed #475569;
   border-radius: 4px;
   text-align: center;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: 'Share Tech Mono', Consolas, monospace;
 }
 
 @media (max-width: 1050px) {

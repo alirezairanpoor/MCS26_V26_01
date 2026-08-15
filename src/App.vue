@@ -4050,7 +4050,7 @@
               {{
                 isScenario2 && !scenario2NewProcedureImported
                   ? 'Procedure - Payload Calibration / Test Imaging'
-                  : 'Procedure - Frankfurt Airport Imaging [50.039414727790565, 8.559004749233628]'
+                  : 'Procedure - Frankfurt Airport Imaging [50.039, 8.559]'
               }}
             </h2>
 
