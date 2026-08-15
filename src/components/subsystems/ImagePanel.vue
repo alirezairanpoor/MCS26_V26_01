@@ -1,20 +1,17 @@
 <script setup lang="ts">
-defineProps<{
-  capturedImageSrc: string;
-  capturedImageName: string;
-  imageTaken: boolean;
-  imageValidity: string;
-}>();
+  defineProps<{
+    capturedImageSrc: string;
+    capturedImageName: string;
+    imageTaken: boolean;
+    imageValidity: string;
+  }>();
 </script>
 
 <template>
   <div>
     <h1>Captured Image</h1>
 
-    <div
-      v-if="!imageTaken || !capturedImageSrc"
-      class="tm-history-panel"
-    >
+    <div v-if="!imageTaken || !capturedImageSrc" class="tm-history-panel">
       <h2>Image Output</h2>
       <p>NO IMAGE CAPTURED</p>
     </div>

@@ -1,38 +1,38 @@
 <script setup lang="ts">
-type TelemetryStatus = 'empty' | 'good' | 'warning' | 'bad';
+  type TelemetryStatus = 'empty' | 'good' | 'warning' | 'bad';
 
-type TelemetryRow = {
-  parameter: string;
-  subsystem: string;
-  measurement: string;
-  unit: string;
-  status: TelemetryStatus;
-};
+  type TelemetryRow = {
+    parameter: string;
+    subsystem: string;
+    measurement: string;
+    unit: string;
+    status: TelemetryStatus;
+  };
 
-type TmLog = {
-  time: string;
-  message: string;
-};
+  type TmLog = {
+    time: string;
+    message: string;
+  };
 
-function valueClass(status: TelemetryStatus) {
-  return 'value-' + status;
-}
+  function valueClass(status: TelemetryStatus) {
+    return 'value-' + status;
+  }
 
-function statusClass(status: TelemetryStatus) {
-  return 'status-' + status;
-}
+  function statusClass(status: TelemetryStatus) {
+    return 'status-' + status;
+  }
 
-function statusLabel(status: TelemetryStatus) {
-  if (status === 'good') return 'NOMINAL';
-  if (status === 'warning') return 'WARNING';
-  if (status === 'bad') return 'LIMIT';
-  return 'NO DATA';
-}
+  function statusLabel(status: TelemetryStatus) {
+    if (status === 'good') return 'NOMINAL';
+    if (status === 'warning') return 'WARNING';
+    if (status === 'bad') return 'LIMIT';
+    return 'NO DATA';
+  }
 
-defineProps<{
-  telemetry: TelemetryRow[];
-  tmHistory: TmLog[];
-}>();
+  defineProps<{
+    telemetry: TelemetryRow[];
+    tmHistory: TmLog[];
+  }>();
 </script>
 
 <template>

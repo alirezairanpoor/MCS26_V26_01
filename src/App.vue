@@ -1,20 +1,20 @@
 <script setup lang="ts">
   import { ref, computed, nextTick, watch } from 'vue';
 
-import { io } from 'socket.io-client';
-import { useAocsTelemetry } from './composables/useAocsTelemetry';
-import { useTcsTelemetry } from './composables/useTcsTelemetry';
-import { usePayloadTelemetry } from './composables/usePayloadTelemetry';
-import { useCdhTelemetry } from './composables/useCdhTelemetry';
-import { useGroundStationTelemetry } from './composables/useGroundStationTelemetry';
-import { useEpsTelemetry } from './composables/useEpsTelemetry';
-import AocsPanel from './components/subsystems/AocsPanel.vue';
-import TcsPanel from './components/subsystems/TcsPanel.vue';
-import PayloadPanel from './components/subsystems/PayloadPanel.vue';
-import CdhPanel from './components/subsystems/CdhPanel.vue';
-import ImagePanel from './components/subsystems/ImagePanel.vue';
-import GroundStationPanel from './components/subsystems/GroundStationPanel.vue';
-import EpsPanel from './components/subsystems/EpsPanel.vue';
+  import { io } from 'socket.io-client';
+  import { useAocsTelemetry } from './composables/useAocsTelemetry';
+  import { useTcsTelemetry } from './composables/useTcsTelemetry';
+  import { usePayloadTelemetry } from './composables/usePayloadTelemetry';
+  import { useCdhTelemetry } from './composables/useCdhTelemetry';
+  import { useGroundStationTelemetry } from './composables/useGroundStationTelemetry';
+  import { useEpsTelemetry } from './composables/useEpsTelemetry';
+  import AocsPanel from './components/subsystems/AocsPanel.vue';
+  import TcsPanel from './components/subsystems/TcsPanel.vue';
+  import PayloadPanel from './components/subsystems/PayloadPanel.vue';
+  import CdhPanel from './components/subsystems/CdhPanel.vue';
+  import ImagePanel from './components/subsystems/ImagePanel.vue';
+  import GroundStationPanel from './components/subsystems/GroundStationPanel.vue';
+  import EpsPanel from './components/subsystems/EpsPanel.vue';
 
   console.log('APP VUE IS RUNNING');
 
@@ -58,7 +58,6 @@ import EpsPanel from './components/subsystems/EpsPanel.vue';
       applySyncedState(state);
     }
   });
-
 
   const selectedScenario = ref('');
   const activePanel = ref('SOM');
@@ -143,21 +142,21 @@ import EpsPanel from './components/subsystems/EpsPanel.vue';
     return '';
   });
 
-const imagingWindowLabel = computed(() => {
-  if (isScenario2.value) {
-    if (scenario2NewProcedureImported.value) {
-      if (missionSeconds.value >= 1860) {
-        return `Next AOS: ${nextAosTime.value}`;
+  const imagingWindowLabel = computed(() => {
+    if (isScenario2.value) {
+      if (scenario2NewProcedureImported.value) {
+        if (missionSeconds.value >= 1860) {
+          return `Next AOS: ${nextAosTime.value}`;
+        }
+
+        return 'Frankfurt Imaging Window: T+30:00 → T+30:30';
       }
 
-      return 'Frankfurt Imaging Window: T+30:00 → T+30:30';
+      return 'Test Imaging Window: T+15:00 → T+16:00';
     }
 
-    return 'Test Imaging Window: T+15:00 → T+16:00';
-  }
-
-  return 'Frankfurt Imaging Window: T+15:00 → T+16:00';
-});
+    return 'Frankfurt Imaging Window: T+15:00 → T+16:00';
+  });
 
   const simulationStatus = ref('IDLE');
   const missionSeconds = ref(0);
@@ -213,18 +212,18 @@ const imagingWindowLabel = computed(() => {
   const epsAskedAfterMitigationBySom = ref(false);
   const epsConfirmedBySom = ref(false);
   const scenario2WeakSignalWarning = ref(false);
-const gs1ConnectionActive = ref(true);
+  const gs1ConnectionActive = ref(true);
 
-// Step 17: GS1 link degradation begins
-const gs1DegradationStartSecond = ref<number | null>(null);
-const gs1ElevationAtDegradation = ref(0);
+  // Step 17: GS1 link degradation begins
+  const gs1DegradationStartSecond = ref<number | null>(null);
+  const gs1ElevationAtDegradation = ref(0);
 
-// Step 18: complete GS1 link loss
-const gs1LossStartSecond = ref<number | null>(null);
+  // Step 18: complete GS1 link loss
+  const gs1LossStartSecond = ref<number | null>(null);
 
-// Tunable degradation profile
-const gs1DegradationFloorElevation = 6.0;
-const gs1DegradationTimeConstant = 45;
+  // Tunable degradation profile
+  const gs1DegradationFloorElevation = 6.0;
+  const gs1DegradationTimeConstant = 45;
   const scenario2Gs1SignalCheckedBySom = ref(false);
   const scenario2Gs2ElevationConfirmedBySom = ref(false);
   const scenario2Gs2SignalQualityCheckedBySom = ref(false);
@@ -625,155 +624,121 @@ const gs1DegradationTimeConstant = 45;
   ];
 
   const passDuration = 1020;
-const nextOrbitDelay = 1800; // 30 minutes until next AOS
+  const nextOrbitDelay = 1800; // 30 minutes until next AOS
 
-const maxElevation = 38;
-const gs1AosDelay = 60;
-const gs2AosDelayAfterGs1Los = 120;
+  const maxElevation = 38;
+  const gs1AosDelay = 60;
+  const gs2AosDelayAfterGs1Los = 120;
 
-// ---------------------------------------------------------------------------
-// GROUND-PASS GEOMETRY REFERENCE MODEL
-// Generic simulator geometry — not flight-certified orbital data.
-// ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // GROUND-PASS GEOMETRY REFERENCE MODEL
+  // Generic simulator geometry — not flight-certified orbital data.
+  // ---------------------------------------------------------------------------
 
-const earthRadiusKm = 6378;
-const simulatedOrbitAltitudeKm = 500;
+  const earthRadiusKm = 6378;
+  const simulatedOrbitAltitudeKm = 500;
 
-// GS1 pass direction
-const gs1AosAzimuthDeg = 230;
-const gs1LosAzimuthDeg = 70;
+  // GS1 pass direction
+  const gs1AosAzimuthDeg = 230;
+  const gs1LosAzimuthDeg = 70;
 
-// S-band LEO-style bounded Doppler envelope
-const gs1MaxDopplerKHz = 45;
+  // S-band LEO-style bounded Doppler envelope
+  const gs1MaxDopplerKHz = 45;
 
-function clamp01(value: number) {
-  return Math.min(1, Math.max(0, value));
-}
-
-function smoothstep01(value: number) {
-  const x = clamp01(value);
-  return x * x * (3 - 2 * x);
-}
-
-function slantRangeFromElevation(elevationDeg: number) {
-  const elevationRad =
-    elevationDeg * Math.PI / 180;
-
-  const orbitalRadiusKm =
-    earthRadiusKm + simulatedOrbitAltitudeKm;
-
-  const horizontalComponent =
-    earthRadiusKm * Math.cos(elevationRad);
-
-  const rangeKm =
-    -earthRadiusKm * Math.sin(elevationRad) +
-    Math.sqrt(
-      orbitalRadiusKm * orbitalRadiusKm -
-      horizontalComponent * horizontalComponent
-    );
-
-  return rangeKm;
-}
-
-const gs1AosReached = computed(() => {
-  return simulationStatus.value === 'RUNNING' && missionSeconds.value >= gs1AosDelay;
-});
-
-const gs1AosCountdown = computed(() => {
-  if (simulationStatus.value !== 'RUNNING') {
-    return 'GS1: WAITING FOR SIMULATION START';
+  function clamp01(value: number) {
+    return Math.min(1, Math.max(0, value));
   }
 
-  // Initial GS1 AOS countdown
-  if (!gs1AosReached.value) {
-    const remaining =
-      Math.max(
-        0,
-        gs1AosDelay - missionSeconds.value
-      );
-
-    const minutes =
-      Math.floor(remaining / 60);
-
-    const seconds =
-      remaining % 60;
-
-    return `GS1 AOS IN: T-${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  function smoothstep01(value: number) {
+    const x = clamp01(value);
+    return x * x * (3 - 2 * x);
   }
 
-  // Scenario 2: GS1 link is degrading after Step 17
-  if (
-    isScenario2.value &&
-    scenario2WeakSignalWarning.value &&
-    gs1ConnectionActive.value
-  ) {
-    return 'GS1: LINK DEGRADING / LOS IMMINENT';
+  function slantRangeFromElevation(elevationDeg: number) {
+    const elevationRad = (elevationDeg * Math.PI) / 180;
+
+    const orbitalRadiusKm = earthRadiusKm + simulatedOrbitAltitudeKm;
+
+    const horizontalComponent = earthRadiusKm * Math.cos(elevationRad);
+
+    const rangeKm =
+      -earthRadiusKm * Math.sin(elevationRad) +
+      Math.sqrt(orbitalRadiusKm * orbitalRadiusKm - horizontalComponent * horizontalComponent);
+
+    return rangeKm;
   }
 
-  // Scenario 2: GS1 lost, waiting for GS2 AOS
-  if (
-    isScenario2.value &&
-    !gs1ConnectionActive.value
-  ) {
+  const gs1AosReached = computed(() => {
+    return simulationStatus.value === 'RUNNING' && missionSeconds.value >= gs1AosDelay;
+  });
+
+  const gs1AosCountdown = computed(() => {
+    if (simulationStatus.value !== 'RUNNING') {
+      return 'GS1: WAITING FOR SIMULATION START';
+    }
+
+    // Initial GS1 AOS countdown
+    if (!gs1AosReached.value) {
+      const remaining = Math.max(0, gs1AosDelay - missionSeconds.value);
+
+      const minutes = Math.floor(remaining / 60);
+
+      const seconds = remaining % 60;
+
+      return `GS1 AOS IN: T-${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    // Scenario 2: GS1 link is degrading after Step 17
+    if (isScenario2.value && scenario2WeakSignalWarning.value && gs1ConnectionActive.value) {
+      return 'GS1: LINK DEGRADING / LOS IMMINENT';
+    }
+
+    // Scenario 2: GS1 lost, waiting for GS2 AOS
+    if (isScenario2.value && !gs1ConnectionActive.value) {
+      if (scenario2Gs2TrackingStartSecond.value === null) {
+        return 'GS1: LINK LOST / GS2 AOS PENDING';
+      }
+
+      const remaining = Math.max(0, scenario2Gs2TrackingStartSecond.value - missionSeconds.value);
+
+      if (remaining > 0) {
+        const minutes = Math.floor(remaining / 60);
+
+        const seconds = remaining % 60;
+
+        return `GS1: LINK LOST / GS2 AOS IN: T-${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }
+
+      return 'GS2: PASS ACTIVE / AOS ACQUIRED';
+    }
+
+    return 'GS1: PASS ACTIVE / AOS ACQUIRED';
+  });
+
+  const gs1AosClass = computed(() => {
+    if (simulationStatus.value !== 'RUNNING') {
+      return 'status-empty';
+    }
+
+    if (!gs1AosReached.value) {
+      return 'status-warning';
+    }
+
+    if (isScenario2.value && scenario2WeakSignalWarning.value && gs1ConnectionActive.value) {
+      return 'status-bad';
+    }
+
     if (
-      scenario2Gs2TrackingStartSecond.value === null
+      isScenario2.value &&
+      !gs1ConnectionActive.value &&
+      scenario2Gs2TrackingStartSecond.value !== null &&
+      missionSeconds.value < scenario2Gs2TrackingStartSecond.value
     ) {
-      return 'GS1: LINK LOST / GS2 AOS PENDING';
+      return 'status-warning';
     }
 
-    const remaining =
-      Math.max(
-        0,
-        scenario2Gs2TrackingStartSecond.value -
-        missionSeconds.value
-      );
-
-    if (remaining > 0) {
-      const minutes =
-        Math.floor(remaining / 60);
-
-      const seconds =
-        remaining % 60;
-
-      return `GS1: LINK LOST / GS2 AOS IN: T-${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    return 'GS2: PASS ACTIVE / AOS ACQUIRED';
-  }
-
-  return 'GS1: PASS ACTIVE / AOS ACQUIRED';
-});
-
-const gs1AosClass = computed(() => {
-  if (simulationStatus.value !== 'RUNNING') {
-    return 'status-empty';
-  }
-
-  if (!gs1AosReached.value) {
-    return 'status-warning';
-  }
-
-  if (
-    isScenario2.value &&
-    scenario2WeakSignalWarning.value &&
-    gs1ConnectionActive.value
-  ) {
-    return 'status-bad';
-  }
-
-  if (
-    isScenario2.value &&
-    !gs1ConnectionActive.value &&
-    scenario2Gs2TrackingStartSecond.value !== null &&
-    missionSeconds.value <
-      scenario2Gs2TrackingStartSecond.value
-  ) {
-    return 'status-warning';
-  }
-
-  return 'status-good';
-});
-
+    return 'status-good';
+  });
 
   const timeToLOSClass = computed(() => {
     const remaining = currentLosSecond.value - missionSeconds.value;
@@ -801,162 +766,98 @@ const gs1AosClass = computed(() => {
     return Number((Math.sin(Math.PI * passProgress.value) * maxElevation).toFixed(1));
   });
 
- const elevation = computed(() => {
-  if (simulationStatus.value !== 'RUNNING') return null;
-  if (missionSeconds.value < gs1AosDelay) return null;
+  const elevation = computed(() => {
+    if (simulationStatus.value !== 'RUNNING') return null;
+    if (missionSeconds.value < gs1AosDelay) return null;
 
-  return nominalGs1Elevation.value;
-});
+    return nominalGs1Elevation.value;
+  });
 
- const gs1GeometryElevation = computed(() => {
-  if (elevation.value === null) return null;
+  const gs1GeometryElevation = computed(() => {
+    if (elevation.value === null) return null;
 
-  if (
-    !isScenario2.value ||
-    gs1DegradationStartSecond.value === null
-  ) {
-    return elevation.value;
-  }
+    if (!isScenario2.value || gs1DegradationStartSecond.value === null) {
+      return elevation.value;
+    }
 
-  const elapsed =
-    Math.max(
-      0,
-      missionSeconds.value -
-      gs1DegradationStartSecond.value
+    const elapsed = Math.max(0, missionSeconds.value - gs1DegradationStartSecond.value);
+
+    const startElevation = Math.max(0, gs1ElevationAtDegradation.value);
+
+    const floorElevation = Math.min(gs1DegradationFloorElevation, startElevation);
+
+    const degradedElevation =
+      floorElevation +
+      (startElevation - floorElevation) * Math.exp(-elapsed / gs1DegradationTimeConstant);
+
+    return Number(degradedElevation.toFixed(1));
+  });
+
+  const gs1GeometryProgress = computed(() => {
+    if (gs1GeometryElevation.value === null) {
+      return 0;
+    }
+
+    if (!isScenario2.value || gs1DegradationStartSecond.value === null) {
+      return passProgress.value;
+    }
+
+    const degradationStartProgress = clamp01(
+      (gs1DegradationStartSecond.value - gs1AosDelay) / passDuration
     );
 
-  const startElevation =
-    Math.max(
-      0,
-      gs1ElevationAtDegradation.value
+    const startElevation = Math.max(0, gs1ElevationAtDegradation.value);
+
+    const floorElevation = Math.min(gs1DegradationFloorElevation, startElevation);
+
+    if (startElevation <= floorElevation + 0.001) {
+      return degradationStartProgress;
+    }
+
+    const remainingFraction = clamp01(
+      (gs1GeometryElevation.value - floorElevation) / (startElevation - floorElevation)
     );
 
-  const floorElevation =
-    Math.min(
-      gs1DegradationFloorElevation,
-      startElevation
-    );
+    const degradationProgress = 1 - remainingFraction;
 
-  const degradedElevation =
-    floorElevation +
-    (startElevation - floorElevation) *
-    Math.exp(
-      -elapsed / gs1DegradationTimeConstant
-    );
+    return clamp01(degradationStartProgress + (1 - degradationStartProgress) * degradationProgress);
+  });
 
-  return Number(
-    degradedElevation.toFixed(1)
-  );
-});
+  const azimuth = computed(() => {
+    if (simulationStatus.value !== 'RUNNING') return null;
+    if (
+      isScenario2.value &&
+      scenario2Gs2TrackingStartSecond.value !== null &&
+      missionSeconds.value >= scenario2Gs2TrackingStartSecond.value
+    ) {
+      return null;
+    }
+    if (missionSeconds.value < gs1AosDelay) return null;
+    if (isLos.value) return null;
+    if (gs1GeometryElevation.value === null) return null;
 
-const gs1GeometryProgress = computed(() => {
-  if (gs1GeometryElevation.value === null) {
-    return 0;
-  }
+    const geometryPhase = smoothstep01(gs1GeometryProgress.value);
 
-  if (
-    !isScenario2.value ||
-    gs1DegradationStartSecond.value === null
-  ) {
-    return passProgress.value;
-  }
+    const azimuthDeg = gs1AosAzimuthDeg + (gs1LosAzimuthDeg - gs1AosAzimuthDeg) * geometryPhase;
 
-  const degradationStartProgress =
-    clamp01(
-      (
-        gs1DegradationStartSecond.value -
-        gs1AosDelay
-      ) / passDuration
-    );
+    return Number(azimuthDeg.toFixed(1));
+  });
 
-  const startElevation =
-    Math.max(
-      0,
-      gs1ElevationAtDegradation.value
-    );
+  const range = computed(() => {
+    if (simulationStatus.value !== 'RUNNING') return null;
+    if (
+      isScenario2.value &&
+      scenario2Gs2TrackingStartSecond.value !== null &&
+      missionSeconds.value >= scenario2Gs2TrackingStartSecond.value
+    ) {
+      return null;
+    }
+    if (missionSeconds.value < gs1AosDelay) return null;
+    if (isLos.value) return null;
+    if (gs1GeometryElevation.value === null) return null;
 
-  const floorElevation =
-    Math.min(
-      gs1DegradationFloorElevation,
-      startElevation
-    );
-
-  if (
-    startElevation <= floorElevation + 0.001
-  ) {
-    return degradationStartProgress;
-  }
-
-  const remainingFraction =
-    clamp01(
-      (
-        gs1GeometryElevation.value -
-        floorElevation
-      ) /
-      (
-        startElevation -
-        floorElevation
-      )
-    );
-
-  const degradationProgress =
-    1 - remainingFraction;
-
-  return clamp01(
-    degradationStartProgress +
-    (1 - degradationStartProgress) *
-    degradationProgress
-  );
-});
-
-const azimuth = computed(() => {
-  if (simulationStatus.value !== 'RUNNING') return null;
-  if (
-  isScenario2.value &&
-  scenario2Gs2TrackingStartSecond.value !== null &&
-  missionSeconds.value >= scenario2Gs2TrackingStartSecond.value
-) {
-  return null;
-}
-  if (missionSeconds.value < gs1AosDelay) return null;
-  if (isLos.value) return null;
-  if (gs1GeometryElevation.value === null) return null;
-
-  const geometryPhase =
-    smoothstep01(gs1GeometryProgress.value);
-
-  const azimuthDeg =
-    gs1AosAzimuthDeg +
-    (
-      gs1LosAzimuthDeg -
-      gs1AosAzimuthDeg
-    ) *
-    geometryPhase;
-
-  return Number(
-    azimuthDeg.toFixed(1)
-  );
-});
-
-const range = computed(() => {
-  if (simulationStatus.value !== 'RUNNING') return null;
-  if (
-  isScenario2.value &&
-  scenario2Gs2TrackingStartSecond.value !== null &&
-  missionSeconds.value >= scenario2Gs2TrackingStartSecond.value
-) {
-  return null;
-}
-  if (missionSeconds.value < gs1AosDelay) return null;
-  if (isLos.value) return null;
-  if (gs1GeometryElevation.value === null) return null;
-
-  return Number(
-    slantRangeFromElevation(
-      gs1GeometryElevation.value
-    ).toFixed(0)
-  );
-});
+    return Number(slantRangeFromElevation(gs1GeometryElevation.value).toFixed(0));
+  });
 
   const timeToLOS = computed(() => {
     const remaining = Math.max(0, currentLosSecond.value - missionSeconds.value);
@@ -975,209 +876,137 @@ const range = computed(() => {
   });
 
   const signalQuality = computed(() => {
-  if (
-    isScenario2.value &&
-    (
-      !gs1ConnectionActive.value ||
-      scenario2WeakSignalWarning.value
-    )
-  ) {
-    return 'BAD';
-  }
+    if (isScenario2.value && (!gs1ConnectionActive.value || scenario2WeakSignalWarning.value)) {
+      return 'BAD';
+    }
 
-  if (elevation.value === null) return 'NO SIGNAL';
-  if (elevation.value < 3) return 'BAD';
-  if (elevation.value < 5) return 'MEDIUM';
-  if (!signalFiltered.value) return 'MEDIUM';
+    if (elevation.value === null) return 'NO SIGNAL';
+    if (elevation.value < 3) return 'BAD';
+    if (elevation.value < 5) return 'MEDIUM';
+    if (!signalFiltered.value) return 'MEDIUM';
 
-  return 'GOOD';
-});
+    return 'GOOD';
+  });
   const signalClass = computed(() => {
     if (signalQuality.value === 'GOOD') return 'status-good';
     if (signalQuality.value === 'MEDIUM') return 'status-warning';
     return 'status-bad';
   });
 
+  const gs2PassDuration = passDuration;
 
-const gs2PassDuration = passDuration;
+  const gs2MaxElevation = 85;
 
-const gs2MaxElevation = 85;
+  const gs2SlowDescentStartElevation = 30;
+  const gs2SlowDescentRate = 0.01;
 
-const gs2SlowDescentStartElevation = 30;
-const gs2SlowDescentRate = 0.01;
+  // GS2 pass direction
+  const gs2AosAzimuthDeg = 188;
+  const gs2LosAzimuthDeg = 42;
 
-// GS2 pass direction
-const gs2AosAzimuthDeg = 188;
-const gs2LosAzimuthDeg = 42;
+  const gs2MaxDopplerKHz = 48;
 
-const gs2MaxDopplerKHz = 48;
+  const gs2PassProgress = computed(() => {
+    if (!isScenario2.value || scenario2Gs2TrackingStartSecond.value === null) {
+      return 0;
+    }
 
-const gs2PassProgress = computed(() => {
-  if (
-    !isScenario2.value ||
-    scenario2Gs2TrackingStartSecond.value === null
-  ) {
-    return 0;
-  }
+    const elapsed = missionSeconds.value - scenario2Gs2TrackingStartSecond.value;
 
-  const elapsed =
-    missionSeconds.value -
-    scenario2Gs2TrackingStartSecond.value;
+    if (elapsed <= 0) return 0;
+    if (elapsed >= gs2PassDuration) return 1;
 
-  if (elapsed <= 0) return 0;
-  if (elapsed >= gs2PassDuration) return 1;
+    return elapsed / gs2PassDuration;
+  });
 
-  return elapsed / gs2PassDuration;
-});
+  const gs2Elevation = computed(() => {
+    if (!isScenario2.value) return null;
 
-const gs2Elevation = computed(() => {
-  if (!isScenario2.value) return null;
+    if (scenario2Gs2TrackingStartSecond.value === null) {
+      return 0;
+    }
 
-  if (
-    scenario2Gs2TrackingStartSecond.value === null
-  ) {
-    return 0;
-  }
+    const elapsed = missionSeconds.value - scenario2Gs2TrackingStartSecond.value;
 
-  const elapsed =
-    missionSeconds.value -
-    scenario2Gs2TrackingStartSecond.value;
+    if (elapsed <= 0) return 0;
 
-  if (elapsed <= 0) return 0;
+    const sineElevation = Math.sin(Math.PI * gs2PassProgress.value) * gs2MaxElevation;
 
-  const sineElevation =
-    Math.sin(
-      Math.PI * gs2PassProgress.value
-    ) *
-    gs2MaxElevation;
+    if (gs2PassProgress.value <= 0.5 || sineElevation >= gs2SlowDescentStartElevation) {
+      return Number(sineElevation.toFixed(1));
+    }
 
-  if (
-    gs2PassProgress.value <= 0.5 ||
-    sineElevation >= gs2SlowDescentStartElevation
-  ) {
+    const slowDescentStartProgress =
+      1 - Math.asin(gs2SlowDescentStartElevation / gs2MaxElevation) / Math.PI;
+
+    const slowDescentStartElapsed = slowDescentStartProgress * gs2PassDuration;
+
+    const slowDescentElapsed = Math.max(0, elapsed - slowDescentStartElapsed);
+
     return Number(
-      sineElevation.toFixed(1)
+      Math.max(0, gs2SlowDescentStartElevation - slowDescentElapsed * gs2SlowDescentRate).toFixed(1)
     );
-  }
+  });
 
-  const slowDescentStartProgress =
-    1 -
-    Math.asin(
-      gs2SlowDescentStartElevation /
-      gs2MaxElevation
-    ) /
-    Math.PI;
+  const gs2GeometryProgress = computed(() => {
+    if (!isScenario2.value || scenario2Gs2TrackingStartSecond.value === null) {
+      return 0;
+    }
 
-  const slowDescentStartElapsed =
-    slowDescentStartProgress *
-    gs2PassDuration;
+    if (gs2Elevation.value === null) {
+      return 0;
+    }
 
-  const slowDescentElapsed =
-    Math.max(
-      0,
-      elapsed - slowDescentStartElapsed
-    );
+    // Ascending half: normal pass timing.
+    if (gs2PassProgress.value <= 0.5) {
+      return gs2PassProgress.value;
+    }
 
-  return Number(
-    Math.max(
-      0,
-      gs2SlowDescentStartElevation -
-      slowDescentElapsed *
-      gs2SlowDescentRate
-    ).toFixed(1)
-  );
-});
+    // Normal descending section above 30 degrees.
+    if (gs2Elevation.value >= gs2SlowDescentStartElevation) {
+      return gs2PassProgress.value;
+    }
 
-const gs2GeometryProgress = computed(() => {
-  if (
-    !isScenario2.value ||
-    scenario2Gs2TrackingStartSecond.value === null
-  ) {
-    return 0;
-  }
+    // Artificial slow-descent section:
+    // derive geometry phase directly from the actual displayed elevation.
+    const normalizedElevation = clamp01(gs2Elevation.value / gs2MaxElevation);
 
-  if (gs2Elevation.value === null) {
-    return 0;
-  }
+    return clamp01(1 - Math.asin(normalizedElevation) / Math.PI);
+  });
 
-  // Ascending half: normal pass timing.
-  if (gs2PassProgress.value <= 0.5) {
-    return gs2PassProgress.value;
-  }
+  const gs2Azimuth = computed(() => {
+    if (!isScenario2.value) return null;
 
-  // Normal descending section above 30 degrees.
-  if (
-    gs2Elevation.value >=
-    gs2SlowDescentStartElevation
-  ) {
-    return gs2PassProgress.value;
-  }
+    if (
+      scenario2Gs2TrackingStartSecond.value === null ||
+      missionSeconds.value < scenario2Gs2TrackingStartSecond.value
+    ) {
+      return null;
+    }
 
-  // Artificial slow-descent section:
-  // derive geometry phase directly from the actual displayed elevation.
-  const normalizedElevation =
-    clamp01(
-      gs2Elevation.value /
-      gs2MaxElevation
-    );
+    const geometryPhase = smoothstep01(gs2GeometryProgress.value);
 
-  return clamp01(
-    1 -
-    Math.asin(normalizedElevation) /
-    Math.PI
-  );
-});
+    const azimuthDeg = gs2AosAzimuthDeg + (gs2LosAzimuthDeg - gs2AosAzimuthDeg) * geometryPhase;
 
-const gs2Azimuth = computed(() => {
-  if (!isScenario2.value) return null;
+    return Number(azimuthDeg.toFixed(1));
+  });
 
-  if (
-    scenario2Gs2TrackingStartSecond.value === null ||
-    missionSeconds.value <
-      scenario2Gs2TrackingStartSecond.value
-  ) {
-    return null;
-  }
+  const gs2Range = computed(() => {
+    if (!isScenario2.value) return null;
 
-  const geometryPhase =
-    smoothstep01(
-      gs2GeometryProgress.value
-    );
+    if (
+      scenario2Gs2TrackingStartSecond.value === null ||
+      missionSeconds.value < scenario2Gs2TrackingStartSecond.value
+    ) {
+      return null;
+    }
 
-  const azimuthDeg =
-    gs2AosAzimuthDeg +
-    (
-      gs2LosAzimuthDeg -
-      gs2AosAzimuthDeg
-    ) *
-    geometryPhase;
+    if (gs2Elevation.value === null) {
+      return null;
+    }
 
-  return Number(
-    azimuthDeg.toFixed(1)
-  );
-});
-
-const gs2Range = computed(() => {
-  if (!isScenario2.value) return null;
-
-  if (
-    scenario2Gs2TrackingStartSecond.value === null ||
-    missionSeconds.value <
-      scenario2Gs2TrackingStartSecond.value
-  ) {
-    return null;
-  }
-
-  if (gs2Elevation.value === null) {
-    return null;
-  }
-
-  return Number(
-    slantRangeFromElevation(
-      gs2Elevation.value
-    ).toFixed(0)
-  );
-});
+    return Number(slantRangeFromElevation(gs2Elevation.value).toFixed(0));
+  });
 
   const scenario2TelemetryBlackout = computed(() => {
     return (
@@ -1196,46 +1025,45 @@ const gs2Range = computed(() => {
     );
   });
 
-const gs1DownlinkAvailable = computed(() => {
-  return (
-    simulationStatus.value === 'RUNNING' &&
-    elevation.value !== null &&
-    !isLos.value &&
-    (!isScenario2.value || gs1ConnectionActive.value)
-  );
-});
+  const gs1DownlinkAvailable = computed(() => {
+    return (
+      simulationStatus.value === 'RUNNING' &&
+      elevation.value !== null &&
+      !isLos.value &&
+      (!isScenario2.value || gs1ConnectionActive.value)
+    );
+  });
 
-const spacecraftTelemetryAvailable = computed(() => {
-  return gs1DownlinkAvailable.value || scenario2Gs2TelemetryLock.value;
-});
+  const spacecraftTelemetryAvailable = computed(() => {
+    return gs1DownlinkAvailable.value || scenario2Gs2TelemetryLock.value;
+  });
 
+  const { cdhTelemetry } = useCdhTelemetry({
+    missionSeconds,
+    spacecraftTelemetryAvailable,
+    scenario2TelemetryBlackout,
 
-const { cdhTelemetry } = useCdhTelemetry({
-  missionSeconds,
-  spacecraftTelemetryAvailable,
-  scenario2TelemetryBlackout,
+    memoryUsed,
+    memoryDumpStarted,
+    memoryDumpComplete,
+    imageTaken,
+    tcHistory,
+  });
 
-  memoryUsed,
-  memoryDumpStarted,
-  memoryDumpComplete,
-  imageTaken,
-  tcHistory,
-});
+  const { tcsTelemetry } = useTcsTelemetry({
+    missionSeconds,
+    spacecraftTelemetryAvailable,
 
-const { tcsTelemetry } = useTcsTelemetry({
-  missionSeconds,
-  spacecraftTelemetryAvailable,
-
-  epsTemperature,
-  payloadPowerLevel,
-  thermalCoolingActive,
-  powerSavingModeActive,
-  batteryEqualizationInProgress,
-  payloadPowerRaised,
-  powerIncreaseInProgress,
-  cameraConfigured,
-  spacecraftStandbyActive,
-});
+    epsTemperature,
+    payloadPowerLevel,
+    thermalCoolingActive,
+    powerSavingModeActive,
+    batteryEqualizationInProgress,
+    payloadPowerRaised,
+    powerIncreaseInProgress,
+    cameraConfigured,
+    spacecraftStandbyActive,
+  });
 
   const gs2ElevationClass = computed(() => {
     if (gs2Elevation.value === null) return 'status-empty';
@@ -1283,8 +1111,6 @@ const { tcsTelemetry } = useTcsTelemetry({
     addTmLog(tmHistoryPayload, payloadTmMessages, 4);
     addTmLog(tmHistoryMemory, memoryTmMessages, 6);
   }
-
- 
 
   const epsTemperatureClass = computed(() => {
     if (epsTemperature.value > 90) return 'status-bad';
@@ -1397,34 +1223,34 @@ const { tcsTelemetry } = useTcsTelemetry({
   const gncProcedureSuggested = ref(false);
   const scenario2NewProcedureImported = ref(false);
   const { aocsTelemetry } = useAocsTelemetry({
-  missionSeconds,
-  spacecraftTelemetryAvailable,
-  isScenario2,
-  scenario2NewProcedureImported,
-});
-const { payloadTelemetry } = usePayloadTelemetry({
-  missionSeconds,
-  spacecraftTelemetryAvailable,
-  scenario2TelemetryBlackout,
+    missionSeconds,
+    spacecraftTelemetryAvailable,
+    isScenario2,
+    scenario2NewProcedureImported,
+  });
+  const { payloadTelemetry } = usePayloadTelemetry({
+    missionSeconds,
+    spacecraftTelemetryAvailable,
+    scenario2TelemetryBlackout,
 
-  isScenario2,
-  scenario2NewProcedureImported,
+    isScenario2,
+    scenario2NewProcedureImported,
 
-  payloadPowerLevel,
-  payloadPowerRaised,
-  powerIncreaseInProgress,
-  powerSavingModeActive,
-  thermalCoolingActive,
-  spacecraftStandbyActive,
+    payloadPowerLevel,
+    payloadPowerRaised,
+    powerIncreaseInProgress,
+    powerSavingModeActive,
+    thermalCoolingActive,
+    spacecraftStandbyActive,
 
-  cameraConfigured,
-  imageTaken,
-  imageValidity,
-  capturedImageName,
+    cameraConfigured,
+    imageTaken,
+    imageValidity,
+    capturedImageName,
 
-  memoryUsed,
-  epsTemperature,
-});
+    memoryUsed,
+    epsTemperature,
+  });
   const procedureImporting = ref(false);
   const emergencyEventCode = 'OPS-EMG-EPS-01';
   const emergencyMessageText = computed(
@@ -1505,8 +1331,8 @@ const { payloadTelemetry } = usePayloadTelemetry({
     scenario2WeakSignalWarning,
     gs1ConnectionActive,
     gs1DegradationStartSecond,
-gs1ElevationAtDegradation,
-gs1LossStartSecond,
+    gs1ElevationAtDegradation,
+    gs1LossStartSecond,
     scenario2Gs1SignalCheckedBySom,
     scenario2Gs2ElevationConfirmedBySom,
     scenario2Gs2SignalQualityCheckedBySom,
@@ -1627,12 +1453,12 @@ gs1LossStartSecond,
   });
 
   const currentProcedureStep = computed(() => {
-  if (simulationStatus.value === 'IDLE') return 1;
+    if (simulationStatus.value === 'IDLE') return 1;
 
-  // Step 1 remains active until GS1 reaches AOS.
-  if (!gs1AosReached.value) return 1;
+    // Step 1 remains active until GS1 reaches AOS.
+    if (!gs1AosReached.value) return 1;
 
-  if (!elevationAskedBySom.value) return 2;
+    if (!elevationAskedBySom.value) return 2;
     if (!elevationConfirmedBySom.value) return 3;
     if (!signalQualityReportedBySom.value) return 4;
     if (!signalFiltered.value) return 5;
@@ -1806,17 +1632,17 @@ gs1LossStartSecond,
   });
 
   const gs1DisplayedElevation = computed(() => {
-  // Once GS2 AOS/tracking begins, GS1 spacecraft geometry is no longer displayed.
-  if (
-    isScenario2.value &&
-    scenario2Gs2TrackingStartSecond.value !== null &&
-    missionSeconds.value >= scenario2Gs2TrackingStartSecond.value
-  ) {
-    return null;
-  }
+    // Once GS2 AOS/tracking begins, GS1 spacecraft geometry is no longer displayed.
+    if (
+      isScenario2.value &&
+      scenario2Gs2TrackingStartSecond.value !== null &&
+      missionSeconds.value >= scenario2Gs2TrackingStartSecond.value
+    ) {
+      return null;
+    }
 
-  return gs1GeometryElevation.value;
-});
+    return gs1GeometryElevation.value;
+  });
 
   const gs1DisplayedElevationClass = computed(() => {
     if (gs1DisplayedElevation.value === null) return 'status-empty';
@@ -1825,199 +1651,181 @@ gs1LossStartSecond,
     return 'status-good';
   });
 
-const {
-  groundStationTelemetry,
-  groundStation2Telemetry,
-} = useGroundStationTelemetry({
-  missionSeconds,
-  simulationStatus,
-  isScenario2,
+  const { groundStationTelemetry, groundStation2Telemetry } = useGroundStationTelemetry({
+    missionSeconds,
+    simulationStatus,
+    isScenario2,
 
-  gs1ConnectionActive,
-  gs1DisplayedElevation,
-  gs1DisplayedElevationClass,
-  gs1DownlinkAvailable,
-  gs1GeometryElevation,
-  gs1GeometryProgress,
-  gs1MaxDopplerKHz,
+    gs1ConnectionActive,
+    gs1DisplayedElevation,
+    gs1DisplayedElevationClass,
+    gs1DownlinkAvailable,
+    gs1GeometryElevation,
+    gs1GeometryProgress,
+    gs1MaxDopplerKHz,
 
-  azimuth,
-  range,
-  passProgress,
+    azimuth,
+    range,
+    passProgress,
 
-  signalFiltered,
-  signalQuality,
-  signalClass,
+    signalFiltered,
+    signalQuality,
+    signalClass,
 
-  scenario2WeakSignalWarning,
-  scenario2TelemetryBlackout,
-  scenario2Gs2TelemetryLock,
-  scenario2Gs2TrackingStartSecond,
-  scenario2Gs2SignalFiltered,
+    scenario2WeakSignalWarning,
+    scenario2TelemetryBlackout,
+    scenario2Gs2TelemetryLock,
+    scenario2Gs2TrackingStartSecond,
+    scenario2Gs2SignalFiltered,
 
-  gs2Elevation,
-  gs2ElevationClass,
-  gs2Azimuth,
-  gs2Range,
-  gs2GeometryProgress,
-  gs2SignalQuality,
-  gs2SignalClass,
-  gs2MaxDopplerKHz,
-});
+    gs2Elevation,
+    gs2ElevationClass,
+    gs2Azimuth,
+    gs2Range,
+    gs2GeometryProgress,
+    gs2SignalQuality,
+    gs2SignalClass,
+    gs2MaxDopplerKHz,
+  });
 
-const { epsTelemetry } = useEpsTelemetry({
-  missionSeconds,
-  spacecraftTelemetryAvailable,
-  scenario2TelemetryBlackout,
-  isScenario2,
+  const { epsTelemetry } = useEpsTelemetry({
+    missionSeconds,
+    spacecraftTelemetryAvailable,
+    scenario2TelemetryBlackout,
+    isScenario2,
 
-  epsTemperature,
-  epsTemperatureClass,
-  netPower,
+    epsTemperature,
+    epsTemperatureClass,
+    netPower,
 
-  batteryA,
-  batteryB,
-  batteryC,
-  batteryEqualizationInProgress,
+    batteryA,
+    batteryB,
+    batteryC,
+    batteryEqualizationInProgress,
 
-  payloadPowerLevel,
-  powerSavingModeActive,
-});
+    payloadPowerLevel,
+    powerSavingModeActive,
+  });
 
+  // ---------------------------------------------------------------------------
+  // SPACON PARAMETER / COMMAND CATALOG
+  // ---------------------------------------------------------------------------
+  // The SPACON matrix is built from the live telemetry definitions. This keeps
+  // every parameter currently used by GS, EPS, AOCS, TCS, Payload and C&DH
+  // available in one place without maintaining a second hard-coded parameter
+  // database. Operational commands override telemetry-only entries with the
+  // same subsystem/code.
 
-// ---------------------------------------------------------------------------
-// SPACON PARAMETER / COMMAND CATALOG
-// ---------------------------------------------------------------------------
-// The SPACON matrix is built from the live telemetry definitions. This keeps
-// every parameter currently used by GS, EPS, AOCS, TCS, Payload and C&DH
-// available in one place without maintaining a second hard-coded parameter
-// database. Operational commands override telemetry-only entries with the
-// same subsystem/code.
+  const spaconSubsystemOrder = ['Ground Station', 'EPS', 'AOCS', 'TCS', 'Payload', 'C&DH'];
 
-const spaconSubsystemOrder = [
-  'Ground Station',
-  'EPS',
-  'AOCS',
-  'TCS',
-  'Payload',
-  'C&DH',
-];
-
-function telemetryParametersForSpacon(
-  subsystem: string,
-  rows: ReadonlyArray<{ parameter: string; subsystem: string }>
-): SpaconCommand[] {
-  return rows.map((telemetryRow) => ({
-    subsystem,
-    code: telemetryRow.parameter,
-    command: `Monitor ${telemetryRow.parameter}`,
-    purpose: telemetryRow.subsystem,
-    kind: 'parameter',
-  }));
-}
-
-const spaconCommands = computed<SpaconCommand[]>(() => {
-  const telemetryParameters: SpaconCommand[] = [
-    ...telemetryParametersForSpacon('Ground Station', groundStationTelemetry.value),
-    ...telemetryParametersForSpacon('Ground Station', groundStation2Telemetry.value),
-    ...telemetryParametersForSpacon('EPS', epsTelemetry.value),
-    ...telemetryParametersForSpacon('AOCS', aocsTelemetry.value),
-    ...telemetryParametersForSpacon('TCS', tcsTelemetry.value),
-    ...telemetryParametersForSpacon('Payload', payloadTelemetry.value),
-    ...telemetryParametersForSpacon('C&DH', cdhTelemetry.value),
-  ];
-
-  const merged = new Map<string, SpaconCommand>();
-
-  for (const parameter of telemetryParameters) {
-    const key = `${parameter.subsystem}::${parameter.code}`;
-    if (!merged.has(key)) {
-      merged.set(key, parameter);
-    }
+  function telemetryParametersForSpacon(
+    subsystem: string,
+    rows: ReadonlyArray<{ parameter: string; subsystem: string }>
+  ): SpaconCommand[] {
+    return rows.map((telemetryRow) => ({
+      subsystem,
+      code: telemetryRow.parameter,
+      command: `Monitor ${telemetryRow.parameter}`,
+      purpose: telemetryRow.subsystem,
+      kind: 'parameter',
+    }));
   }
 
-  // Keep all existing operational SPACON commands. If a real command uses the
-  // same code as a telemetry parameter, the command takes precedence.
-  for (const command of spaconActionCommands) {
-    const key = `${command.subsystem}::${command.code}`;
-    merged.set(key, {
-      ...command,
-      kind: 'action',
+  const spaconCommands = computed<SpaconCommand[]>(() => {
+    const telemetryParameters: SpaconCommand[] = [
+      ...telemetryParametersForSpacon('Ground Station', groundStationTelemetry.value),
+      ...telemetryParametersForSpacon('Ground Station', groundStation2Telemetry.value),
+      ...telemetryParametersForSpacon('EPS', epsTelemetry.value),
+      ...telemetryParametersForSpacon('AOCS', aocsTelemetry.value),
+      ...telemetryParametersForSpacon('TCS', tcsTelemetry.value),
+      ...telemetryParametersForSpacon('Payload', payloadTelemetry.value),
+      ...telemetryParametersForSpacon('C&DH', cdhTelemetry.value),
+    ];
+
+    const merged = new Map<string, SpaconCommand>();
+
+    for (const parameter of telemetryParameters) {
+      const key = `${parameter.subsystem}::${parameter.code}`;
+      if (!merged.has(key)) {
+        merged.set(key, parameter);
+      }
+    }
+
+    // Keep all existing operational SPACON commands. If a real command uses the
+    // same code as a telemetry parameter, the command takes precedence.
+    for (const command of spaconActionCommands) {
+      const key = `${command.subsystem}::${command.code}`;
+      merged.set(key, {
+        ...command,
+        kind: 'action',
+      });
+    }
+
+    return Array.from(merged.values()).sort((a, b) => {
+      const subsystemDifference =
+        spaconSubsystemOrder.indexOf(a.subsystem) - spaconSubsystemOrder.indexOf(b.subsystem);
+
+      if (subsystemDifference !== 0) {
+        return subsystemDifference;
+      }
+
+      return a.code.localeCompare(b.code);
     });
-  }
+  });
 
-  return Array.from(merged.values()).sort((a, b) => {
-    const subsystemDifference =
-      spaconSubsystemOrder.indexOf(a.subsystem) -
-      spaconSubsystemOrder.indexOf(b.subsystem);
+  const spaconSearchQuery = ref('');
 
-    if (subsystemDifference !== 0) {
-      return subsystemDifference;
+  const filteredSpaconCommands = computed(() => {
+    const query = spaconSearchQuery.value.trim().toLowerCase();
+
+    if (!query) {
+      return spaconCommands.value;
     }
 
-    return a.code.localeCompare(b.code);
+    return spaconCommands.value.filter((item) => {
+      const searchableText = [item.subsystem, item.code, item.command].join(' ').toLowerCase();
+
+      return searchableText.includes(query);
+    });
   });
-});
 
-const spaconSearchQuery = ref('');
-
-const filteredSpaconCommands = computed(() => {
-  const query = spaconSearchQuery.value.trim().toLowerCase();
-
-  if (!query) {
-    return spaconCommands.value;
-  }
-
-  return spaconCommands.value.filter((item) => {
-    const searchableText = [
-      item.subsystem,
-      item.code,
-      item.command,
-    ]
-      .join(' ')
-      .toLowerCase();
-
-    return searchableText.includes(query);
+  const spaconSubsystems = computed(() => {
+    return spaconSubsystemOrder.filter((subsystem) =>
+      filteredSpaconCommands.value.some((item) => item.subsystem === subsystem)
+    );
   });
-});
 
-const spaconSubsystems = computed(() => {
-  return spaconSubsystemOrder.filter((subsystem) =>
-    filteredSpaconCommands.value.some((item) => item.subsystem === subsystem)
-  );
-});
-
-function commandsForSubsystem(subsystem: string) {
-  return filteredSpaconCommands.value.filter((item) => item.subsystem === subsystem);
-}
-
-const selectedSpaconCommand = computed(() => {
-  return spaconCommands.value.find((cmd) => cmd.command === selectedCommand.value);
-});
-
-const selectedCommandDisplay = computed(() => {
-  if (!selectedSpaconCommand.value) return 'NONE';
-  return selectedSpaconCommand.value.code + ' - ' + selectedSpaconCommand.value.command;
-});
-
-function selectFirstSpaconSearchResult() {
-  if (!isSpacon.value) {
-    return;
+  function commandsForSubsystem(subsystem: string) {
+    return filteredSpaconCommands.value.filter((item) => item.subsystem === subsystem);
   }
 
-  const firstMatch = filteredSpaconCommands.value[0];
+  const selectedSpaconCommand = computed(() => {
+    return spaconCommands.value.find((cmd) => cmd.command === selectedCommand.value);
+  });
 
-  if (!firstMatch) {
-    resultStatus.value = 'FAILED - NO SPACON SEARCH MATCH';
-    return;
+  const selectedCommandDisplay = computed(() => {
+    if (!selectedSpaconCommand.value) return 'NONE';
+    return selectedSpaconCommand.value.code + ' - ' + selectedSpaconCommand.value.command;
+  });
+
+  function selectFirstSpaconSearchResult() {
+    if (!isSpacon.value) {
+      return;
+    }
+
+    const firstMatch = filteredSpaconCommands.value[0];
+
+    if (!firstMatch) {
+      resultStatus.value = 'FAILED - NO SPACON SEARCH MATCH';
+      return;
+    }
+
+    selectCommand(firstMatch.command);
   }
 
-  selectCommand(firstMatch.command);
-}
-
-function clearSpaconSearch() {
-  spaconSearchQuery.value = '';
-}
+  function clearSpaconSearch() {
+    spaconSearchQuery.value = '';
+  }
 
   function markSomFail(action: string, message: string) {
     failedSomAction.value = action;
@@ -2634,8 +2442,7 @@ function clearSpaconSearch() {
 
       memoryVerifiedBySom.value = true;
       clearSomFail();
-      resultStatus.value =
-  `SOE2 REPORT - C&DH PANEL: MEM221 ${memoryUsed.value}% / SOM EVALUATION: NOMINAL`;
+      resultStatus.value = `SOE2 REPORT - C&DH PANEL: MEM221 ${memoryUsed.value}% / SOM EVALUATION: NOMINAL`;
       return;
     }
 
@@ -2814,23 +2621,19 @@ function clearSpaconSearch() {
     }
 
     powerStatusVerifiedBySom.value = true;
-batteryEmergencyDowngraded.value = true;
+    batteryEmergencyDowngraded.value = true;
 
-// Action Step 17:
-// begin controlled GS1 link degradation from the current geometry.
-if (gs1DegradationStartSecond.value === null) {
-  gs1ElevationAtDegradation.value =
-    gs1GeometryElevation.value ??
-    elevation.value ??
-    0;
+    // Action Step 17:
+    // begin controlled GS1 link degradation from the current geometry.
+    if (gs1DegradationStartSecond.value === null) {
+      gs1ElevationAtDegradation.value = gs1GeometryElevation.value ?? elevation.value ?? 0;
 
-  gs1DegradationStartSecond.value =
-    missionSeconds.value;
-}
+      gs1DegradationStartSecond.value = missionSeconds.value;
+    }
 
-scenario2WeakSignalWarning.value = true;
+    scenario2WeakSignalWarning.value = true;
 
-clearSomFail();
+    clearSomFail();
     resultStatus.value = 'SOM VERIFIED - POWER NOMINAL / BATTERY RECOVERED TO WARNING STATUS';
   }
 
@@ -2854,12 +2657,10 @@ clearSomFail();
     // Step 18: GS1 signal loss starts here.
     scenario2WeakSignalWarning.value = false;
 
-gs1LossStartSecond.value =
-  missionSeconds.value;
+    gs1LossStartSecond.value = missionSeconds.value;
 
-gs1ConnectionActive.value = false;
-scenario2Gs2TrackingStartSecond.value =
-  missionSeconds.value + gs2AosDelayAfterGs1Los;
+    gs1ConnectionActive.value = false;
+    scenario2Gs2TrackingStartSecond.value = missionSeconds.value + gs2AosDelayAfterGs1Los;
 
     clearSomFail();
     resultStatus.value = `SOE1 REPORT - EPS PANEL: EPT014 ${epsTemperature.value} °C / PCU447 HIGH / DCC208 HIGH / NET118 ${netPower.value} W / GS1 SIGNAL LOSS DETECTED`;
@@ -2957,8 +2758,6 @@ scenario2Gs2TrackingStartSecond.value =
     cameraConfigurationRequestedBySom.value = false;
     postPowerThermalReportedBySoe.value = false;
     spacecraftStandbyRequestedBySom.value = false;
-
-    
 
     tmHistoryGS.value = [];
     tmHistoryEPS.value = [];
@@ -3517,12 +3316,12 @@ scenario2Gs2TrackingStartSecond.value =
     epsAskedAfterMitigationBySom.value = false;
     epsConfirmedBySom.value = false;
     scenario2WeakSignalWarning.value = false;
-gs1ConnectionActive.value = true;
+    gs1ConnectionActive.value = true;
 
-gs1DegradationStartSecond.value = null;
-gs1ElevationAtDegradation.value = 0;
+    gs1DegradationStartSecond.value = null;
+    gs1ElevationAtDegradation.value = 0;
 
-gs1LossStartSecond.value = null;
+    gs1LossStartSecond.value = null;
     scenario2Gs1SignalCheckedBySom.value = false;
     scenario2Gs2ElevationConfirmedBySom.value = false;
     scenario2Gs2SignalQualityCheckedBySom.value = false;
@@ -4109,11 +3908,7 @@ gs1LossStartSecond.value = null;
           aria-label="Hoshyar Iranpour LinkedIn profile"
           title="LinkedIn"
         >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            class="linkedin-icon"
-          >
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="linkedin-icon">
             <path
               fill="currentColor"
               d="M6.94 8.5H3.56V19h3.38V8.5ZM5.25 3A1.96 1.96 0 1 0 5.25 6.92 1.96 1.96 0 0 0 5.25 3ZM20.44 13.06c0-3.17-1.69-4.64-3.95-4.64-1.82 0-2.63 1-3.08 1.71V8.5h-3.38c.04 1.08 0 10.5 0 10.5h3.38v-5.86c0-.31.02-.63.12-.85.25-.63.82-1.27 1.78-1.27 1.26 0 1.76.96 1.76 2.36V19h3.37v-5.94Z"
@@ -4153,11 +3948,11 @@ gs1LossStartSecond.value = null;
       <h2>MCS</h2>
       <button @click="activePanel = 'SOM'">SOM</button>
       <button @click="activePanel = 'GS'">Ground Station</button>
-<button @click="activePanel = 'EPS'">EPS</button>
-<button @click="activePanel = 'AOCS'">AOCS</button>
-<button @click="activePanel = 'TCS'">TCS</button>
-<button @click="activePanel = 'Payload'">Payload</button>
-      
+      <button @click="activePanel = 'EPS'">EPS</button>
+      <button @click="activePanel = 'AOCS'">AOCS</button>
+      <button @click="activePanel = 'TCS'">TCS</button>
+      <button @click="activePanel = 'Payload'">Payload</button>
+
       <button @click="activePanel = 'CDH'">C&DH</button>
       <button @click="activePanel = 'SPACON'">SPACON</button>
       <button @click="activePanel = 'IMAGE'">Captured Image</button>
@@ -4165,29 +3960,23 @@ gs1LossStartSecond.value = null;
     </div>
 
     <div class="main">
-<div class="topbar">
-  <div>Mission Control System</div>
+      <div class="topbar">
+        <div>Mission Control System</div>
 
-  <div>
-    Status: {{ simulationStatus }}
-  </div>
+        <div>Status: {{ simulationStatus }}</div>
 
-  <div :class="missionTimeClass">
-    Time: {{ missionTime }}
-  </div>
+        <div :class="missionTimeClass">Time: {{ missionTime }}</div>
 
-  <div :class="gs1AosClass">
-    {{ gs1AosCountdown }}
-  </div>
+        <div :class="gs1AosClass">
+          {{ gs1AosCountdown }}
+        </div>
 
-  <div>
-    Phase: {{ missionPhase }}
-  </div>
+        <div>Phase: {{ missionPhase }}</div>
 
-  <div :class="imagingClass">
-    {{ imagingWindowLabel }}
-  </div>
-</div>
+        <div :class="imagingClass">
+          {{ imagingWindowLabel }}
+        </div>
+      </div>
 
       <div v-if="emergencyActive" class="emergency-banner" :class="emergencyLevelClass">
         {{ emergencyEventCode }} — {{ emergencyLevelText }}: EPS BATTERY DISCHARGE
@@ -4258,12 +4047,12 @@ gs1LossStartSecond.value = null;
 
           <div class="procedure-box full-width">
             <h2>
-  {{
-    isScenario2 && !scenario2NewProcedureImported
-      ? 'Procedure - Payload Calibration / Test Imaging'
-      : 'Procedure - Frankfurt Airport Imaging [50.039414727790565, 8.559004749233628]'
-  }}
-</h2>
+              {{
+                isScenario2 && !scenario2NewProcedureImported
+                  ? 'Procedure - Payload Calibration / Test Imaging'
+                  : 'Procedure - Frankfurt Airport Imaging [50.039414727790565, 8.559004749233628]'
+              }}
+            </h2>
 
             <table class="procedure-table">
               <tr>
@@ -4278,13 +4067,9 @@ gs1LossStartSecond.value = null;
               <tr>
                 <td>1</td>
                 <td>SOM</td>
-                <td>
-  Start simulation and wait for GS1 Acquisition of Signal (AOS).
-</td>
+                <td>Start simulation and wait for GS1 Acquisition of Signal (AOS).</td>
 
-<td>
-  GS1 AOS acquired<br />
-</td>
+                <td>GS1 AOS acquired<br /></td>
                 <td>
                   <button
                     @click="startSimulation"
@@ -4294,8 +4079,8 @@ gs1LossStartSecond.value = null;
                   </button>
                 </td>
                 <td :class="classForStep(1, gs1AosReached)">
-  {{ statusForStep(1, gs1AosReached) }}
-</td>
+                  {{ statusForStep(1, gs1AosReached) }}
+                </td>
               </tr>
 
               <tr>
@@ -4343,8 +4128,8 @@ gs1LossStartSecond.value = null;
                 <td>4</td>
                 <td>SOM → SOE2</td>
                 <td>
-                   Ask SOE2 to open Ground Station panel and report initial D/L quality using
-  <strong>GSE001</strong> and <strong>GBL092</strong>.
+                  Ask SOE2 to open Ground Station panel and report initial D/L quality using
+                  <strong>GSE001</strong> and <strong>GBL092</strong>.
                 </td>
                 <td>
                   <div><strong>GSE001</strong> → NOMINAL & <strong>GBL092</strong> → Good</div>
@@ -4423,8 +4208,8 @@ gs1LossStartSecond.value = null;
                 <td>7</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  Ask SOE2 to open Command & Data Handling panel and report <strong>MEM221</strong> memory usage
-                  before dump.
+                  Ask SOE2 to open Command & Data Handling panel and report
+                  <strong>MEM221</strong> memory usage before dump.
                 </td>
                 <td>Nominal → <strong>Memory Used ≤ 10%</strong></td>
                 <td>
@@ -4446,9 +4231,9 @@ gs1LossStartSecond.value = null;
                 <td>SOM</td>
                 <td>Authorize memory dump if memory is occupied.</td>
                 <td>
-  <div><strong>MEM221</strong> ≤ 50% → Sufficient memory available</div>
-  <div><strong>MEM221</strong> &gt; 50% → Memory dump required</div>
-</td>
+                  <div><strong>MEM221</strong> ≤ 50% → Sufficient memory available</div>
+                  <div><strong>MEM221</strong> &gt; 50% → Memory dump required</div>
+                </td>
                 <td>
                   <button
                     @click="somAuthorizeMemoryDump"
@@ -4506,13 +4291,14 @@ gs1LossStartSecond.value = null;
 
                 <td>
                   <template v-if="isScenario2">
-                    Ask SOE1 to open Command & Data Handling panel and report <strong>MEM221</strong> memory usage
-                    after dump. SOM compares the reported value with the criteria immediately.
+                    Ask SOE1 to open Command & Data Handling panel and report
+                    <strong>MEM221</strong> memory usage after dump. SOM compares the reported value
+                    with the criteria immediately.
                   </template>
 
                   <template v-else>
-                    Ask SOE1 to open Command & Data Handling panel and report <strong>MEM221</strong> memory usage
-                    after dump.
+                    Ask SOE1 to open Command & Data Handling panel and report
+                    <strong>MEM221</strong> memory usage after dump.
                   </template>
                 </td>
 
@@ -4830,42 +4616,42 @@ gs1LossStartSecond.value = null;
               </tr>
 
               <tr v-if="!isScenario2 || (isScenario2 && !scenario2NewProcedureImported)">
-  <td>20</td>
-  <td>SOM → SPACON</td>
+                <td>20</td>
+                <td>SOM → SPACON</td>
 
-  <td>
-    <template v-if="isScenario2">
-      Command SPACON to select <strong>IMG901</strong> and execute payload calibration
-      test image acquisition.
-    </template>
+                <td>
+                  <template v-if="isScenario2">
+                    Command SPACON to select <strong>IMG901</strong> and execute payload calibration
+                    test image acquisition.
+                  </template>
 
-    <template v-else>
-      Command SPACON to select <strong>IMG901</strong> and execute Frankfurt Airport
-      image acquisition.
-    </template>
-  </td>
+                  <template v-else>
+                    Command SPACON to select <strong>IMG901</strong> and execute Frankfurt Airport
+                    image acquisition.
+                  </template>
+                </td>
 
-  <td>
-    {{
-      isScenario2
-        ? 'Test Imaging Window: T+15:00 → T+16:00'
-        : 'Frankfurt Imaging Window: T+15:00 → T+16:00'
-    }}
-  </td>
+                <td>
+                  {{
+                    isScenario2
+                      ? 'Test Imaging Window: T+15:00 → T+16:00'
+                      : 'Frankfurt Imaging Window: T+15:00 → T+16:00'
+                  }}
+                </td>
 
-  <td>
-    <button
-      @click="somRequestNormalImageCapture"
-      :disabled="!isSom || !canSomRequestNormalImageCapture()"
-      :class="{ actionFail: failedSomAction === 'requestNormalImageCapture' }"
-    >
-      {{
-        isScenario2
-          ? 'Execute test image acquisition'
-          : 'Execute Frankfurt image acquisition'
-      }}
-    </button>
-  </td>
+                <td>
+                  <button
+                    @click="somRequestNormalImageCapture"
+                    :disabled="!isSom || !canSomRequestNormalImageCapture()"
+                    :class="{ actionFail: failedSomAction === 'requestNormalImageCapture' }"
+                  >
+                    {{
+                      isScenario2
+                        ? 'Execute test image acquisition'
+                        : 'Execute Frankfurt image acquisition'
+                    }}
+                  </button>
+                </td>
                 <td
                   :class="
                     imageTaken
@@ -5530,39 +5316,29 @@ gs1LossStartSecond.value = null;
           :tm-history="tmHistoryEPS"
         />
 
-<AocsPanel
-  v-if="activePanel === 'AOCS'"
-  :telemetry="aocsTelemetry"
-/>
+        <AocsPanel v-if="activePanel === 'AOCS'" :telemetry="aocsTelemetry" />
 
-
-<TcsPanel
-  v-if="activePanel === 'TCS'"
-  :telemetry="tcsTelemetry"
-/>
-
+        <TcsPanel v-if="activePanel === 'TCS'" :telemetry="tcsTelemetry" />
 
         <PayloadPanel
-  v-if="activePanel === 'Payload'"
-  :telemetry="payloadTelemetry"
-  :tm-history="tmHistoryPayload"
-/>
-
-          
+          v-if="activePanel === 'Payload'"
+          :telemetry="payloadTelemetry"
+          :tm-history="tmHistoryPayload"
+        />
 
         <ImagePanel
-  v-if="activePanel === 'IMAGE'"
-  :captured-image-src="capturedImageSrc"
-  :captured-image-name="capturedImageName"
-  :image-taken="imageTaken"
-  :image-validity="imageValidity"
-/>
+          v-if="activePanel === 'IMAGE'"
+          :captured-image-src="capturedImageSrc"
+          :captured-image-name="capturedImageName"
+          :image-taken="imageTaken"
+          :image-validity="imageValidity"
+        />
 
-<CdhPanel
-  v-if="activePanel === 'CDH'"
-  :telemetry="cdhTelemetry"
-  :tm-history="tmHistoryMemory"
-/>
+        <CdhPanel
+          v-if="activePanel === 'CDH'"
+          :telemetry="cdhTelemetry"
+          :tm-history="tmHistoryMemory"
+        />
 
         <div v-if="activePanel === 'SPACON'">
           <h1>SPACON (Spacecraft Controller)</h1>
