@@ -254,12 +254,17 @@
 
   const capturedImageName = ref('');
   const imageValidity = ref('NO IMAGE');
+  const capturedImageCapturedAt = ref('');
+  const capturedImageLocation = ref('');
+  const capturedImageCoordinates = ref('');
 
   const tcHistory = ref<{ time: string; command: string; result: string }[]>([]);
 
   type TmLog = { time: string; message: string };
   const tmHistoryGS = ref<TmLog[]>([]);
   const tmHistoryEPS = ref<TmLog[]>([]);
+  const tmHistoryAOCS = ref<TmLog[]>([]);
+  const tmHistoryTCS = ref<TmLog[]>([]);
   const tmHistoryPayload = ref<TmLog[]>([]);
   const tmHistoryMemory = ref<TmLog[]>([]);
   let lastTmLogSecond = -1;
@@ -1092,6 +1097,44 @@
     if (history.value.length > 12) history.value.pop();
   }
 
+  function addTelemetryRowTmLog(
+    history: typeof tmHistoryGS,
+    telemetry: {
+      parameter: string;
+      subsystem: string;
+      measurement: string;
+      unit: string;
+      status: string;
+    }[],
+    offset: number
+  ) {
+    const availableRows = telemetry.filter(
+      (row) =>
+        row.measurement !== 'NO TELEMETRY' &&
+        row.measurement !== 'NO DATA' &&
+        row.measurement !== 'NO SIGNAL'
+    );
+
+    if (availableRows.length === 0) return;
+
+    const index = (missionSeconds.value + offset) % availableRows.length;
+
+    const row = availableRows[index];
+
+    const unitText = row.unit && row.unit !== 'state' && row.unit !== '-' ? ` ${row.unit}` : '';
+
+    const message = `${row.parameter} ` + `${row.subsystem}=` + `${row.measurement}${unitText}`;
+
+    history.value.unshift({
+      time: missionTime.value,
+      message,
+    });
+
+    if (history.value.length > 12) {
+      history.value.pop();
+    }
+  }
+
   function updateSubsystemTmLogs() {
     if (simulationStatus.value !== 'RUNNING') return;
     if (missionSeconds.value === lastTmLogSecond) return;
@@ -1106,8 +1149,14 @@
     if (!gs1TmLock && !gs2TmLock) return;
 
     lastTmLogSecond = missionSeconds.value;
+
     addTmLog(tmHistoryGS, gsTmMessages, gs2TmLock ? 1 : 0);
     addTmLog(tmHistoryEPS, epsTmMessages, 2);
+
+    addTelemetryRowTmLog(tmHistoryAOCS, aocsTelemetry.value, 3);
+
+    addTelemetryRowTmLog(tmHistoryTCS, tcsTelemetry.value, 5);
+
     addTmLog(tmHistoryPayload, payloadTmMessages, 4);
     addTmLog(tmHistoryMemory, memoryTmMessages, 6);
   }
@@ -1245,8 +1294,11 @@
 
     cameraConfigured,
     imageTaken,
-    imageValidity,
     capturedImageName,
+    imageValidity,
+    capturedImageCapturedAt,
+    capturedImageLocation,
+    capturedImageCoordinates,
 
     memoryUsed,
     epsTemperature,
@@ -1364,10 +1416,15 @@
 
     capturedImageName,
     imageValidity,
+    capturedImageCapturedAt,
+    capturedImageLocation,
+    capturedImageCoordinates,
 
     tcHistory,
     tmHistoryGS,
     tmHistoryEPS,
+    tmHistoryAOCS,
+    tmHistoryTCS,
     tmHistoryPayload,
     tmHistoryMemory,
 
@@ -2761,6 +2818,8 @@
 
     tmHistoryGS.value = [];
     tmHistoryEPS.value = [];
+    tmHistoryAOCS.value = [];
+    tmHistoryTCS.value = [];
     tmHistoryPayload.value = [];
     tmHistoryMemory.value = [];
     lastTmLogSecond = -1;
@@ -3361,6 +3420,9 @@
 
     capturedImageName.value = '';
     imageValidity.value = 'NO IMAGE';
+    capturedImageCapturedAt.value = '';
+    capturedImageLocation.value = '';
+    capturedImageCoordinates.value = '';
 
     tcHistory.value = [];
     tmHistoryGS.value = [];
@@ -3466,14 +3528,86 @@
     syncNow();
   }
 
+  function updateCapturedImageMetadata() {
+    switch (capturedImageName.value) {
+      case '0-4':
+        capturedImageLocation.value = 'Mannheim – Feudenheim – Rheinau – Ladenburg – Ilvesheim';
+        capturedImageCoordinates.value = '49.481404° N, 8.529502° E';
+        break;
+
+      case '4-8':
+        capturedImageLocation.value = 'Laudenbach – Hemsbach – Lampertheim – Bürstadt – Einhausen';
+        capturedImageCoordinates.value = '49.601288° N, 8.549813° E';
+        break;
+
+      case '8-11':
+        capturedImageLocation.value =
+          'Alsbach-Hähnlein – Zwingenberg – Jugenheim – Seeheim – Pfungstadt – Eberstadt';
+        capturedImageCoordinates.value = '49.771704° N, 8.546100° E';
+        break;
+
+      case '11-13':
+        capturedImageLocation.value =
+          'Darmstadt – Griesheim – Weiterstadt – Riedstadt – Groß-Gerau – Wixhausen – Messel – Egelsbach';
+        capturedImageCoordinates.value = '49.893374° N, 8.573235° E';
+        break;
+
+      case '13-14':
+        capturedImageLocation.value =
+          'Darmstadt – Griesheim – Weiterstadt – Riedstadt – Groß-Gerau – Wixhausen – Egelsbach – Langen';
+        capturedImageCoordinates.value = '49.926225° N, 8.549311° E';
+        break;
+
+      case '14-15':
+        capturedImageLocation.value =
+          'Groß-Gerau – Braunshardt – Erzhausen – Darmstadt-Arheilgen – Mörfelden-Walldorf – Langen';
+        capturedImageCoordinates.value = '49.967097° N, 8.552744° E';
+        break;
+
+      case '15-15.5':
+        capturedImageLocation.value =
+          'Frankfurt Airport – Walldorf – Raunheim – Langen – Kelsterbach';
+        capturedImageCoordinates.value = '50.036830° N, 8.559610° E';
+        break;
+
+      case '15.5-16':
+        capturedImageLocation.value =
+          'Groß-Gerau – Braunshardt – Erzhausen – Darmstadt-Arheilgen – Mörfelden-Walldorf – Langen';
+        capturedImageCoordinates.value = '49.967097° N, 8.552744° E';
+        break;
+
+      case '16-16.5':
+        capturedImageLocation.value =
+          'Frankfurt am Main – Gallus – Sossenheim – Sulzbach – Kelkheim – Eschborn';
+        capturedImageCoordinates.value = '50.106462° N, 8.558924° E';
+        break;
+
+      case '16.5-17':
+        capturedImageLocation.value =
+          'Frankfurt am Main – Gallus – Sossenheim – Sulzbach – Kelkheim – Eschborn – Oberursel – Kronberg';
+        capturedImageCoordinates.value = '50.106462° N, 8.558924° E';
+        break;
+
+      case '17-18':
+        capturedImageLocation.value = 'Bad Homburg – Oberursel – Kronberg – Friedrichsdorf';
+        capturedImageCoordinates.value = '50.232028° N, 8.619349° E';
+        break;
+
+      default:
+        capturedImageLocation.value = '';
+        capturedImageCoordinates.value = '';
+        break;
+    }
+  }
+
   function selectImageForTime() {
     const t = missionSeconds.value / 60;
 
     if (isScenario2.value && scenario2NewProcedureImported.value) {
       if (t >= 0 && t < 5) {
-        capturedImageName.value = '4-8';
-        imageValidity.value = 'NO TARGET VISIBILITY';
-        return 'NO TARGET VISIBILITY';
+        capturedImageName.value = '';
+        imageValidity.value = 'NO IMAGE';
+        return 'NO IMAGE';
       }
 
       if (t >= 5 && t < 10) {
@@ -3732,6 +3866,9 @@
       memoryDumpComplete.value = false;
       capturedImageName.value = '';
       imageValidity.value = 'NO IMAGE';
+      capturedImageCapturedAt.value = '';
+      capturedImageLocation.value = '';
+
       return 'SUCCESS - MEMORY DUMP STARTED / STORED IMAGES REMOVED';
     }
 
@@ -3841,8 +3978,83 @@
       if (!cameraVerifiedBySom.value) return 'FAILED - CAMERA NOT VERIFIED BY SOM';
       if (!epsNominal.value) return 'FAILED - EPS UNSAFE FOR IMAGING';
 
+      const captureTime = new Date();
+
       imageTaken.value = true;
-      return selectImageForTime();
+
+      const captureResult = selectImageForTime();
+
+      capturedImageCapturedAt.value =
+        `${captureTime.toLocaleDateString()} ` +
+        `${captureTime.toLocaleTimeString()} ` +
+        `(${Intl.DateTimeFormat().resolvedOptions().timeZone})`;
+
+      updateCapturedImageMetadata();
+
+      return captureResult;
+
+      // First select the actual image and determine its validity.
+
+      // Store metadata for every real captured image,
+      // including early / late / wrong-target images.
+      if (capturedImageName.value) {
+        const computerTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        capturedImageCapturedAt.value =
+          `${captureTime.toLocaleDateString()} ` +
+          `${captureTime.toLocaleTimeString()} ` +
+          `(${computerTimeZone})`;
+
+        if (isScenario2.value && !scenario2NewProcedureImported.value) {
+          capturedImageLocation.value = 'Calibration / Test Imaging — Nadir';
+        } else {
+          switch (imageValidity.value) {
+            case 'VALID TARGET IMAGE':
+              capturedImageLocation.value =
+                'Frankfurt Airport — 50.039414727790565, 8.559004749233628';
+              break;
+
+            case 'FINAL APPROACH IMAGE':
+            case 'EARLY IMAGE':
+              capturedImageLocation.value = 'Frankfurt Target Approach';
+              break;
+
+            case 'PRE-TARGET AREA':
+              capturedImageLocation.value = 'Pre-Target Area — Frankfurt Approach';
+              break;
+
+            case 'TARGET APPROACHING':
+              capturedImageLocation.value = 'Approaching Frankfurt Target Area';
+              break;
+
+            case 'EARLY PASS GEOMETRY':
+              capturedImageLocation.value = 'Early Pass — Before Frankfurt Target Area';
+              break;
+
+            case 'WRONG TARGET AREA':
+              capturedImageLocation.value = 'Outside Frankfurt Target Area';
+              break;
+
+            case 'NO TARGET VISIBILITY':
+              capturedImageLocation.value = 'Target Not Visible';
+              break;
+
+            case 'LATE TARGET IMAGE':
+            case 'LATE IMAGE':
+            case 'VERY LATE IMAGE':
+              capturedImageLocation.value = 'Past Frankfurt Target Area';
+              break;
+
+            default:
+              capturedImageLocation.value = 'Mission Ground Track';
+          }
+        }
+      } else {
+        capturedImageCapturedAt.value = '';
+        capturedImageLocation.value = '';
+      }
+
+      return captureResult;
     }
 
     if (command === 'Spacecraft Standby Mode') {
@@ -4208,7 +4420,7 @@
                 <td>7</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  Ask SOE2 to open Command & Data Handling panel and report
+                  Ask SOE2 to open C&DH panel and report
                   <strong>MEM221</strong> memory usage before dump.
                 </td>
                 <td>Nominal → <strong>Memory Used ≤ 10%</strong></td>
@@ -4291,13 +4503,13 @@
 
                 <td>
                   <template v-if="isScenario2">
-                    Ask SOE1 to open Command & Data Handling panel and report
+                    Ask SOE1 to open C&DH panel and report
                     <strong>MEM221</strong> memory usage after dump. SOM compares the reported value
                     with the criteria immediately.
                   </template>
 
                   <template v-else>
-                    Ask SOE1 to open Command & Data Handling panel and report
+                    Ask SOE1 to open C&DH panel and report
                     <strong>MEM221</strong> memory usage after dump.
                   </template>
                 </td>
@@ -5316,9 +5528,17 @@
           :tm-history="tmHistoryEPS"
         />
 
-        <AocsPanel v-if="activePanel === 'AOCS'" :telemetry="aocsTelemetry" />
+        <AocsPanel
+          v-if="activePanel === 'AOCS'"
+          :telemetry="aocsTelemetry"
+          :tm-history="tmHistoryAOCS"
+        />
 
-        <TcsPanel v-if="activePanel === 'TCS'" :telemetry="tcsTelemetry" />
+        <TcsPanel
+          v-if="activePanel === 'TCS'"
+          :telemetry="tcsTelemetry"
+          :tm-history="tmHistoryTCS"
+        />
 
         <PayloadPanel
           v-if="activePanel === 'Payload'"
@@ -5332,6 +5552,9 @@
           :captured-image-name="capturedImageName"
           :image-taken="imageTaken"
           :image-validity="imageValidity"
+          :captured-at="capturedImageCapturedAt"
+          :capture-location="capturedImageLocation"
+          :capture-coordinates="capturedImageCoordinates"
         />
 
         <CdhPanel

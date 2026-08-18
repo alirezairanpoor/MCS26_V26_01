@@ -62,6 +62,7 @@
   const selectedScenario = ref('');
   const activePanel = ref('SOM');
   const isScenario2 = computed(() => selectedScenario.value === 'Scenario 2');
+  const isElementaryScenario = computed(() => selectedScenario.value === 'Scenario 1 Elementary');
 
   const pendingScenario = ref('');
   const introPhase = ref<'menu' | 'fade' | 'video'>('menu');
@@ -254,12 +255,17 @@
 
   const capturedImageName = ref('');
   const imageValidity = ref('NO IMAGE');
+  const capturedImageCapturedAt = ref('');
+  const capturedImageLocation = ref('');
+  const capturedImageCoordinates = ref('');
 
   const tcHistory = ref<{ time: string; command: string; result: string }[]>([]);
 
   type TmLog = { time: string; message: string };
   const tmHistoryGS = ref<TmLog[]>([]);
   const tmHistoryEPS = ref<TmLog[]>([]);
+  const tmHistoryAOCS = ref<TmLog[]>([]);
+  const tmHistoryTCS = ref<TmLog[]>([]);
   const tmHistoryPayload = ref<TmLog[]>([]);
   const tmHistoryMemory = ref<TmLog[]>([]);
   let lastTmLogSecond = -1;
@@ -1092,6 +1098,44 @@
     if (history.value.length > 12) history.value.pop();
   }
 
+  function addTelemetryRowTmLog(
+    history: typeof tmHistoryGS,
+    telemetry: {
+      parameter: string;
+      subsystem: string;
+      measurement: string;
+      unit: string;
+      status: string;
+    }[],
+    offset: number
+  ) {
+    const availableRows = telemetry.filter(
+      (row) =>
+        row.measurement !== 'NO TELEMETRY' &&
+        row.measurement !== 'NO DATA' &&
+        row.measurement !== 'NO SIGNAL'
+    );
+
+    if (availableRows.length === 0) return;
+
+    const index = (missionSeconds.value + offset) % availableRows.length;
+
+    const row = availableRows[index];
+
+    const unitText = row.unit && row.unit !== 'state' && row.unit !== '-' ? ` ${row.unit}` : '';
+
+    const message = `${row.parameter} ` + `${row.subsystem}=` + `${row.measurement}${unitText}`;
+
+    history.value.unshift({
+      time: missionTime.value,
+      message,
+    });
+
+    if (history.value.length > 12) {
+      history.value.pop();
+    }
+  }
+
   function updateSubsystemTmLogs() {
     if (simulationStatus.value !== 'RUNNING') return;
     if (missionSeconds.value === lastTmLogSecond) return;
@@ -1106,8 +1150,14 @@
     if (!gs1TmLock && !gs2TmLock) return;
 
     lastTmLogSecond = missionSeconds.value;
+
     addTmLog(tmHistoryGS, gsTmMessages, gs2TmLock ? 1 : 0);
     addTmLog(tmHistoryEPS, epsTmMessages, 2);
+
+    addTelemetryRowTmLog(tmHistoryAOCS, aocsTelemetry.value, 3);
+
+    addTelemetryRowTmLog(tmHistoryTCS, tcsTelemetry.value, 5);
+
     addTmLog(tmHistoryPayload, payloadTmMessages, 4);
     addTmLog(tmHistoryMemory, memoryTmMessages, 6);
   }
@@ -1364,10 +1414,14 @@
 
     capturedImageName,
     imageValidity,
+    capturedImageCapturedAt,
+    capturedImageLocation,
+    capturedImageCoordinates,
 
-    tcHistory,
     tmHistoryGS,
     tmHistoryEPS,
+    tmHistoryAOCS,
+    tmHistoryTCS,
     tmHistoryPayload,
     tmHistoryMemory,
 
@@ -1706,6 +1760,28 @@
     payloadPowerLevel,
     powerSavingModeActive,
   });
+
+  function elementaryTelemetryRows<T extends { parameter: string }>(rows: readonly T[]): T[] {
+    if (!isElementaryScenario.value) {
+      return [...rows];
+    }
+
+    return [...rows].sort((a, b) => a.parameter.localeCompare(b.parameter)).slice(0, 20);
+  }
+
+  const displayedGroundStationTelemetry = computed(() =>
+    elementaryTelemetryRows(groundStationTelemetry.value)
+  );
+
+  const displayedGroundStation2Telemetry = computed(() =>
+    elementaryTelemetryRows(groundStation2Telemetry.value)
+  );
+
+  const displayedEpsTelemetry = computed(() => elementaryTelemetryRows(epsTelemetry.value));
+  const displayedAocsTelemetry = computed(() => elementaryTelemetryRows(aocsTelemetry.value));
+  const displayedTcsTelemetry = computed(() => elementaryTelemetryRows(tcsTelemetry.value));
+  const displayedPayloadTelemetry = computed(() => elementaryTelemetryRows(payloadTelemetry.value));
+  const displayedCdhTelemetry = computed(() => elementaryTelemetryRows(cdhTelemetry.value));
 
   // ---------------------------------------------------------------------------
   // SPACON PARAMETER / COMMAND CATALOG
@@ -2761,6 +2837,8 @@
 
     tmHistoryGS.value = [];
     tmHistoryEPS.value = [];
+    tmHistoryAOCS.value = [];
+    tmHistoryTCS.value = [];
     tmHistoryPayload.value = [];
     tmHistoryMemory.value = [];
     lastTmLogSecond = -1;
@@ -3361,6 +3439,9 @@
 
     capturedImageName.value = '';
     imageValidity.value = 'NO IMAGE';
+    capturedImageCapturedAt.value = '';
+    capturedImageLocation.value = '';
+    capturedImageCoordinates.value = '';
 
     tcHistory.value = [];
     tmHistoryGS.value = [];
@@ -3466,14 +3547,86 @@
     syncNow();
   }
 
+  function updateCapturedImageMetadata() {
+    switch (capturedImageName.value) {
+      case '0-4':
+        capturedImageLocation.value = 'Mannheim – Feudenheim – Rheinau – Ladenburg – Ilvesheim';
+        capturedImageCoordinates.value = '49.481404° N, 8.529502° E';
+        break;
+
+      case '4-8':
+        capturedImageLocation.value = 'Laudenbach – Hemsbach – Lampertheim – Bürstadt – Einhausen';
+        capturedImageCoordinates.value = '49.601288° N, 8.549813° E';
+        break;
+
+      case '8-11':
+        capturedImageLocation.value =
+          'Alsbach-Hähnlein – Zwingenberg – Jugenheim – Seeheim – Pfungstadt – Eberstadt';
+        capturedImageCoordinates.value = '49.771704° N, 8.546100° E';
+        break;
+
+      case '11-13':
+        capturedImageLocation.value =
+          'Darmstadt – Griesheim – Weiterstadt – Riedstadt – Groß-Gerau – Wixhausen – Messel – Egelsbach';
+        capturedImageCoordinates.value = '49.893374° N, 8.573235° E';
+        break;
+
+      case '13-14':
+        capturedImageLocation.value =
+          'Darmstadt – Griesheim – Weiterstadt – Riedstadt – Groß-Gerau – Wixhausen – Egelsbach – Langen';
+        capturedImageCoordinates.value = '49.926225° N, 8.549311° E';
+        break;
+
+      case '14-15':
+        capturedImageLocation.value =
+          'Groß-Gerau – Braunshardt – Erzhausen – Darmstadt-Arheilgen – Mörfelden-Walldorf – Langen';
+        capturedImageCoordinates.value = '49.967097° N, 8.552744° E';
+        break;
+
+      case '15-15.5':
+        capturedImageLocation.value =
+          'Frankfurt Airport – Walldorf – Raunheim – Langen – Kelsterbach';
+        capturedImageCoordinates.value = '50.036830° N, 8.559610° E';
+        break;
+
+      case '15.5-16':
+        capturedImageLocation.value =
+          'Groß-Gerau – Braunshardt – Erzhausen – Darmstadt-Arheilgen – Mörfelden-Walldorf – Langen';
+        capturedImageCoordinates.value = '49.967097° N, 8.552744° E';
+        break;
+
+      case '16-16.5':
+        capturedImageLocation.value =
+          'Frankfurt am Main – Gallus – Sossenheim – Sulzbach – Kelkheim – Eschborn';
+        capturedImageCoordinates.value = '50.106462° N, 8.558924° E';
+        break;
+
+      case '16.5-17':
+        capturedImageLocation.value =
+          'Frankfurt am Main – Gallus – Sossenheim – Sulzbach – Kelkheim – Eschborn – Oberursel – Kronberg';
+        capturedImageCoordinates.value = '50.106462° N, 8.558924° E';
+        break;
+
+      case '17-18':
+        capturedImageLocation.value = 'Bad Homburg – Oberursel – Kronberg – Friedrichsdorf';
+        capturedImageCoordinates.value = '50.232028° N, 8.619349° E';
+        break;
+
+      default:
+        capturedImageLocation.value = '';
+        capturedImageCoordinates.value = '';
+        break;
+    }
+  }
+
   function selectImageForTime() {
     const t = missionSeconds.value / 60;
 
     if (isScenario2.value && scenario2NewProcedureImported.value) {
       if (t >= 0 && t < 5) {
-        capturedImageName.value = '4-8';
-        imageValidity.value = 'NO TARGET VISIBILITY';
-        return 'NO TARGET VISIBILITY';
+        capturedImageName.value = '';
+        imageValidity.value = 'NO IMAGE';
+        return 'NO IMAGE';
       }
 
       if (t >= 5 && t < 10) {
@@ -3732,6 +3885,9 @@
       memoryDumpComplete.value = false;
       capturedImageName.value = '';
       imageValidity.value = 'NO IMAGE';
+      capturedImageCapturedAt.value = '';
+      capturedImageLocation.value = '';
+      capturedImageCoordinates.value = '';
       return 'SUCCESS - MEMORY DUMP STARTED / STORED IMAGES REMOVED';
     }
 
@@ -3841,8 +3997,26 @@
       if (!cameraVerifiedBySom.value) return 'FAILED - CAMERA NOT VERIFIED BY SOM';
       if (!epsNominal.value) return 'FAILED - EPS UNSAFE FOR IMAGING';
 
+      const captureTime = new Date();
+
       imageTaken.value = true;
-      return selectImageForTime();
+
+      const captureResult = selectImageForTime();
+
+      if (capturedImageName.value) {
+        capturedImageCapturedAt.value =
+          `${captureTime.toLocaleDateString()} ` +
+          `${captureTime.toLocaleTimeString()} ` +
+          `(${Intl.DateTimeFormat().resolvedOptions().timeZone})`;
+
+        updateCapturedImageMetadata();
+      } else {
+        capturedImageCapturedAt.value = '';
+        capturedImageLocation.value = '';
+        capturedImageCoordinates.value = '';
+      }
+
+      return captureResult;
     }
 
     if (command === 'Spacecraft Standby Mode') {
@@ -3918,6 +4092,10 @@
       </p>
 
       <p style="margin-top: 20px">Select a training scenario</p>
+
+      <button :disabled="introPhase !== 'menu'" @click="selectScenario('Scenario 1 Elementary')">
+        Nominal Ground Pass and Imaging (Elementary)
+      </button>
 
       <button :disabled="introPhase !== 'menu'" @click="selectScenario('Scenario 1')">
         Nominal Ground Pass and Imaging
@@ -4036,7 +4214,11 @@
             :disabled="!isSom || procedureImporting"
           >
             <span v-if="procedureImporting" class="button-spinner"></span>
-            {{ procedureImporting ? 'WIRD HERUNTERGELADEN / IMPORTIERT...' : 'NEUE PROZEDUR IMPORTIEREN' }}
+            {{
+              procedureImporting
+                ? 'WIRD HERUNTERGELADEN / IMPORTIERT...'
+                : 'NEUE PROZEDUR IMPORTIEREN'
+            }}
           </button>
         </div>
       </div>
@@ -4108,7 +4290,9 @@
               <tr>
                 <td>3</td>
                 <td>SOM</td>
-                <td>Bestätigen, dass die Elevation oberhalb der operativen Elevationsmaske liegt.</td>
+                <td>
+                  Bestätigen, dass die Elevation oberhalb der operativen Elevationsmaske liegt.
+                </td>
                 <td>Elevation/<strong>GEL005</strong> ≥ 5°</td>
                 <td>
                   <button
@@ -4128,7 +4312,8 @@
                 <td>4</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, das Ground-Station-Panel zu öffnen und die anfängliche D/L-Qualität anhand von
+                  SOE2 anweisen, das Ground-Station-Panel zu öffnen und die anfängliche D/L-Qualität
+                  anhand von
                   <strong>GSE001</strong> und <strong>GBL092</strong>.
                 </td>
                 <td>
@@ -4153,7 +4338,8 @@
                 <td>5</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, für GS1 <strong>GSE001</strong> auszuwählen und Filter Signal auszuführen.
+                  SPACON anweisen, für GS1 <strong>GSE001</strong> auszuwählen und Filter Signal
+                  auszuführen.
                 </td>
                 <td>Ausführungszeit ~ 10 [s]</td>
                 <td>
@@ -4186,8 +4372,9 @@
                 <td>6</td>
                 <td>SOM → SOE1</td>
                 <td>
-                  SOE1 anweisen, das Ground-Station-Panel zu öffnen und <strong>GSE001</strong> sowie
-                  <strong>GBL092</strong> das Ergebnis der Signalfilterung zu verifizieren.
+                  SOE1 anweisen, das Ground-Station-Panel zu öffnen und
+                  <strong>GSE001</strong> sowie <strong>GBL092</strong> das Ergebnis der
+                  Signalfilterung zu verifizieren.
                 </td>
                 <td><strong>GBL092</strong> → GOOD & <strong>GSE001</strong> → NOMINAL</td>
                 <td>
@@ -4252,7 +4439,8 @@
                 <td>9</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>MEM221</strong> auszuwählen und Dump Payload Memory auszuführen.
+                  SPACON anweisen, <strong>MEM221</strong> auszuwählen und Dump Payload Memory
+                  auszuführen.
                 </td>
                 <td>Ausführungszeit ~ 15 [s]</td>
                 <td>
@@ -4292,8 +4480,8 @@
                 <td>
                   <template v-if="isScenario2">
                     SOE1 anweisen, das Command-&-Data-Handling-Panel zu öffnen und
-                    <strong>MEM221</strong> die Speicherauslastung nach dem Dump zu melden. SOM vergleicht den gemeldeten Wert
-                    unmittelbar mit den Kriterien.
+                    <strong>MEM221</strong> die Speicherauslastung nach dem Dump zu melden. SOM
+                    vergleicht den gemeldeten Wert unmittelbar mit den Kriterien.
                   </template>
 
                   <template v-else>
@@ -4305,12 +4493,16 @@
                 <td>
                   <template v-if="isScenario2">
                     <div><strong>MEM221</strong> ≤ 10% → NOMINAL</div>
-                    <div>Falls <strong>MEM221</strong> höher ist, ist der Dump nicht abgeschlossen</div>
+                    <div>
+                      Falls <strong>MEM221</strong> höher ist, ist der Dump nicht abgeschlossen
+                    </div>
                   </template>
 
                   <template v-else>
                     <div><strong>MEM221</strong> ≤ 10% → NOMINAL</div>
-                    <div>Falls <strong>MEM221</strong> höher ist, ist der Dump nicht abgeschlossen</div>
+                    <div>
+                      Falls <strong>MEM221</strong> höher ist, ist der Dump nicht abgeschlossen
+                    </div>
                   </template>
                 </td>
 
@@ -4339,7 +4531,8 @@
                 <td>11</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, das Payload-Panel zu öffnen und den Instrument Mode <strong>PLD620</strong> zu melden.
+                  SOE2 anweisen, das Payload-Panel zu öffnen und den Instrument Mode
+                  <strong>PLD620</strong> zu melden.
                 </td>
                 <td><strong>PLD620</strong> → STANDBY</td>
                 <td>
@@ -4437,7 +4630,8 @@
                 <td>14</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>EPT014</strong> auszuwählen und Reduce Payload Power auszuführen.
+                  SPACON anweisen, <strong>EPT014</strong> auszuwählen und Reduce Payload Power
+                  auszuführen.
                 </td>
                 <td>Ausführungszeit ~ 15 [s]</td>
                 <td>
@@ -4474,7 +4668,8 @@
                 <td>15</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, das EPS-Panel zu öffnen und <strong>EPT014</strong> nach der Mitigation zu melden.
+                  SOE2 anweisen, das EPS-Panel zu öffnen und <strong>EPT014</strong> nach der
+                  Mitigation zu melden.
                 </td>
                 <td>
                   <div><strong>EPT014</strong> &lt; 75.0°[C]</div>
@@ -4520,8 +4715,8 @@
                 <td>17</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>PWR740</strong> auszuwählen und Increase Payload
-                  Power auszuführen.
+                  SPACON anweisen, <strong>PWR740</strong> auszuwählen und Increase Payload Power
+                  auszuführen.
                 </td>
                 <td>
                   <div>Ausführungszeit ~ 15 [s]</div>
@@ -4561,10 +4756,12 @@
                 <td>18</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>CAM000</strong> auszuwählen und Configure Camera auszuführen.
+                  SPACON anweisen, <strong>CAM000</strong> auszuwählen und Configure Camera
+                  auszuführen.
                 </td>
                 <td>
-                  <strong>ACHTUNG:</strong> Die EPS-Temperatur kann nach Erhöhung der Payload-Leistung um 0.03 °/s ansteigen.
+                  <strong>ACHTUNG:</strong> Die EPS-Temperatur kann nach Erhöhung der
+                  Payload-Leistung um 0.03 °/s ansteigen.
                 </td>
                 <td>
                   <button
@@ -4596,7 +4793,8 @@
                 <td>19</td>
                 <td>SOM → SOE1</td>
                 <td>
-                  SOE1 anweisen, das Payload-Panel zu öffnen und die Kamerakonfiguration <strong>CAM000</strong> zu verifizieren.
+                  SOE1 anweisen, das Payload-Panel zu öffnen und die Kamerakonfiguration
+                  <strong>CAM000</strong> zu verifizieren.
                 </td>
                 <td><strong>CAM000</strong> → READY</td>
                 <td>
@@ -4619,11 +4817,13 @@
 
                 <td>
                   <template v-if="isScenario2">
-                    SPACON anweisen, <strong>IMG901</strong> auszuwählen und die Payload-Kalibrierungs-Testaufnahme auszuführen.
+                    SPACON anweisen, <strong>IMG901</strong> auszuwählen und die
+                    Payload-Kalibrierungs-Testaufnahme auszuführen.
                   </template>
 
                   <template v-else>
-                    SPACON anweisen, <strong>IMG901</strong> auszuwählen und die Aufnahme des Flughafens Frankfurt auszuführen.
+                    SPACON anweisen, <strong>IMG901</strong> auszuwählen und die Aufnahme des
+                    Flughafens Frankfurt auszuführen.
                   </template>
                 </td>
 
@@ -4641,11 +4841,7 @@
                     :disabled="!isSom || !canSomRequestNormalImageCapture()"
                     :class="{ actionFail: failedSomAction === 'requestNormalImageCapture' }"
                   >
-                    {{
-                      isScenario2
-                        ? 'Testaufnahme ausführen'
-                        : 'Frankfurt-Aufnahme ausführen'
-                    }}
+                    {{ isScenario2 ? 'Testaufnahme ausführen' : 'Frankfurt-Aufnahme ausführen' }}
                   </button>
                 </td>
                 <td
@@ -4675,7 +4871,8 @@
                 <td>21</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>STB901</strong> auszuwählen und Spacecraft Standby Mode zur Energieeinsparung auszuführen.
+                  SPACON anweisen, <strong>STB901</strong> auszuwählen und Spacecraft Standby Mode
+                  zur Energieeinsparung auszuführen.
                 </td>
                 <td>S/C-Standby aktiv</td>
                 <td>
@@ -4708,11 +4905,13 @@
                 <td>13</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>BAT330</strong> auszuwählen und Battery Equalization Transfer auszuführen. Die Ladung von Batterie A wird auf Batterie B/C umverteilt.
+                  SPACON anweisen, <strong>BAT330</strong> auszuwählen und Battery Equalization
+                  Transfer auszuführen. Die Ladung von Batterie A wird auf Batterie B/C umverteilt.
                 </td>
                 <td>
                   <div>
-                    Batterieladewerte ausgleichen, um die Leistungsreserve wiederherzustellen. Emergency-Status aktiv lassen, bis die Verifikation die Erholung bestätigt
+                    Batterieladewerte ausgleichen, um die Leistungsreserve wiederherzustellen.
+                    Emergency-Status aktiv lassen, bis die Verifikation die Erholung bestätigt
                   </div>
                   <div>Ausführungszeit ~ 20 [s]</div>
                 </td>
@@ -4749,7 +4948,9 @@
                 <td>14</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, das EPS-Panel zu öffnen und <strong>BCH096</strong>, <strong>BCH097</strong> sowie <strong>BCH098</strong> nach BAT330 erneut zu melden.
+                  SOE2 anweisen, das EPS-Panel zu öffnen und <strong>BCH096</strong>,
+                  <strong>BCH097</strong> sowie <strong>BCH098</strong> nach BAT330 erneut zu
+                  melden.
                 </td>
                 <td>
                   <div><strong>BCH096</strong> ~ 34.7%</div>
@@ -4774,7 +4975,8 @@
                 <td>15</td>
                 <td>SOM → SOE1</td>
                 <td>
-                  SOE1 anweisen, das EPS-Panel zu öffnen und die Spacecraft-Leistungsreserve <strong>NET118</strong> zu melden.
+                  SOE1 anweisen, das EPS-Panel zu öffnen und die Spacecraft-Leistungsreserve
+                  <strong>NET118</strong> zu melden.
                 </td>
                 <td>
                   <div>Falls <strong>NET118</strong> ≥ 900 [W] →</div>
@@ -4798,7 +5000,8 @@
                 <td>16</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>PSM001</strong> auszuwählen und Enter Power Saving Mode auszuführen.
+                  SPACON anweisen, <strong>PSM001</strong> auszuwählen und Enter Power Saving Mode
+                  auszuführen.
                 </td>
                 <td>Ausführungszeit ~ 15 [s]</td>
                 <td>
@@ -4835,11 +5038,14 @@
                 <td>17</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, das EPS-Panel zu öffnen und <strong>NET118</strong>, <strong>BCH096</strong>, <strong>BCH097</strong> und <strong>BCH098</strong> erneut zu melden.
+                  SOE2 anweisen, das EPS-Panel zu öffnen und <strong>NET118</strong>,
+                  <strong>BCH096</strong>, <strong>BCH097</strong> und
+                  <strong>BCH098</strong> erneut zu melden.
                 </td>
                 <td>
                   <div>
-                    Wenn die Leistung → <strong>NOMINAL</strong> & Batteriewerte > <strong>20%</strong>
+                    Wenn die Leistung → <strong>NOMINAL</strong> & Batteriewerte >
+                    <strong>20%</strong>
                   </div>
                   <div>
                     Erholung verifizieren. Der Batteriealarm wird herabgestuft von
@@ -4864,7 +5070,8 @@
                 <td>18</td>
                 <td>SOM → SOE1</td>
                 <td>
-                  SOE1 anweisen, das EPS-Panel zu öffnen und die Temperatur-/Leistungsparameter <strong>EPT014</strong> und <strong>NET118</strong> zu melden.
+                  SOE1 anweisen, das EPS-Panel zu öffnen und die Temperatur-/Leistungsparameter
+                  <strong>EPT014</strong> und <strong>NET118</strong> zu melden.
                 </td>
                 <td>
                   <div>NOMINAL → <strong>EPT014</strong> = 70.0–75.0 °[C]</div>
@@ -4888,8 +5095,13 @@
               <tr v-if="isScenario2 && scenario2NewProcedureImported">
                 <td>19</td>
                 <td>SOM → SOE2</td>
-                <td>SOE2 anweisen, die Signalqualität mit GS1 <strong>GSE001</strong> zu verifizieren.</td>
-                <td>Wenn die Signalqualität BAD ist oder die GS1-Verbindung verloren geht → U/L mit GS2 herstellen</td>
+                <td>
+                  SOE2 anweisen, die Signalqualität mit GS1 <strong>GSE001</strong> zu verifizieren.
+                </td>
+                <td>
+                  Wenn die Signalqualität BAD ist oder die GS1-Verbindung verloren geht → U/L mit
+                  GS2 herstellen
+                </td>
                 <td>
                   <button
                     @click="scenario2VerifyGs1Signal"
@@ -4926,7 +5138,10 @@
               <tr v-if="isScenario2 && scenario2NewProcedureImported">
                 <td>21</td>
                 <td>SOM → SOE1</td>
-                <td>SOE1 anweisen, für GS2 <strong>GS2SIG</strong> und <strong>GBL092</strong> zu melden.</td>
+                <td>
+                  SOE1 anweisen, für GS2 <strong>GS2SIG</strong> und <strong>GBL092</strong> zu
+                  melden.
+                </td>
                 <td>
                   <div><strong>GS2SIG</strong> → NOMINAL & <strong>GBL092</strong> → Good</div>
                   <div>Andernfalls ist eine Filterung erforderlich</div>
@@ -4949,7 +5164,8 @@
                 <td>22</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>GSE001</strong> auszuwählen und Filter Signal für GS2 auszuführen.
+                  SPACON anweisen, <strong>GSE001</strong> auszuwählen und Filter Signal für GS2
+                  auszuführen.
                 </td>
                 <td>Ausführungszeit ~ 10 [s]</td>
                 <td>
@@ -4982,7 +5198,8 @@
                 <td>23</td>
                 <td>SOM</td>
                 <td>
-                  Den SOE1-Thermalbericht mit den Kriterien vergleichen. Bei hoher Temperatur SPACON Thermal Mitigation anfordern.
+                  Den SOE1-Thermalbericht mit den Kriterien vergleichen. Bei hoher Temperatur SPACON
+                  Thermal Mitigation anfordern.
                 </td>
                 <td><strong>EPT014</strong> → 70.0–75.0 °[C] → Nominal</td>
                 <td>
@@ -5003,7 +5220,8 @@
                 <td>24</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>EPT014</strong> auszuwählen und Reduce Payload Power auszuführen.
+                  SPACON anweisen, <strong>EPT014</strong> auszuwählen und Reduce Payload Power
+                  auszuführen.
                 </td>
                 <td>Ausführungszeit ~ 15 [s]</td>
                 <td>
@@ -5040,7 +5258,8 @@
                 <td>25</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, das EPS-Panel zu öffnen und die Temperatur <strong>EPT014</strong> nach der Mitigation zu melden.
+                  SOE2 anweisen, das EPS-Panel zu öffnen und die Temperatur
+                  <strong>EPT014</strong> nach der Mitigation zu melden.
                 </td>
                 <td>Temperatur sollte im Minimum liegen</td>
                 <td>
@@ -5063,9 +5282,13 @@
                 <td>Bestätigen, dass EPS nominal ist.</td>
                 <td>
                   <div>
-                    <strong>ACHTUNG:</strong> Die EPS-Temperatur kann nach Erhöhung der Payload-Leistung ansteigen
+                    <strong>ACHTUNG:</strong> Die EPS-Temperatur kann nach Erhöhung der
+                    Payload-Leistung ansteigen
                   </div>
-                  <div>Sicherstellen, dass sich <strong>EPT014</strong> innerhalb einer Minute nicht ändert</div>
+                  <div>
+                    Sicherstellen, dass sich <strong>EPT014</strong> innerhalb einer Minute nicht
+                    ändert
+                  </div>
                 </td>
                 <td>
                   <button
@@ -5085,7 +5308,8 @@
                 <td>27</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>PWR740</strong> auszuwählen und Increase Payload Power für die Aufnahme auszuführen.
+                  SPACON anweisen, <strong>PWR740</strong> auszuwählen und Increase Payload Power
+                  für die Aufnahme auszuführen.
                 </td>
                 <td>
                   <div>Thermaler Anstieg beginnt langsam</div>
@@ -5125,7 +5349,8 @@
                 <td>28</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>CAM000</strong> auszuwählen und Configure Camera auszuführen.
+                  SPACON anweisen, <strong>CAM000</strong> auszuwählen und Configure Camera
+                  auszuführen.
                 </td>
                 <td>
                   <div>Kamera konfiguriert</div>
@@ -5161,7 +5386,8 @@
                 <td>29</td>
                 <td>SOM → SOE1</td>
                 <td>
-                  SOE1 anweisen, die Kamerakonfiguration anhand von Payload/<strong>CAM201</strong> und <strong>PLD620</strong> zu verifizieren.
+                  SOE1 anweisen, die Kamerakonfiguration anhand von Payload/<strong>CAM201</strong>
+                  und <strong>PLD620</strong> zu verifizieren.
                 </td>
                 <td>
                   <div><strong>PLD620</strong> → ACTIVE</div>
@@ -5185,7 +5411,8 @@
                 <td>30</td>
                 <td>SOM → SOE2</td>
                 <td>
-                  SOE2 anweisen, die Thermalwerte <strong>EPT014</strong> und <strong>DCC208</strong> nach Erhöhung der Payload-Leistung zu melden.
+                  SOE2 anweisen, die Thermalwerte <strong>EPT014</strong> und
+                  <strong>DCC208</strong> nach Erhöhung der Payload-Leistung zu melden.
                 </td>
                 <td>Temperaturtrend gemeldet; nach PWR740 wird ein langsamer Anstieg erwartet.</td>
                 <td>
@@ -5205,7 +5432,9 @@
               <tr v-if="isScenario2 && scenario2NewProcedureImported">
                 <td>31</td>
                 <td>SOM → SPACON</td>
-                <td>SPACON anweisen, <strong>IMG901</strong> auszuwählen und Take Image auszuführen.</td>
+                <td>
+                  SPACON anweisen, <strong>IMG901</strong> auszuwählen und Take Image auszuführen.
+                </td>
                 <td>Aufnahmefenster: T+30:00 → T+30:30</td>
                 <td>
                   <button
@@ -5237,7 +5466,8 @@
                 <td>32</td>
                 <td>SOM → SPACON</td>
                 <td>
-                  SPACON anweisen, <strong>STB901</strong> auszuwählen und Spacecraft Standby Mode zur Energieeinsparung auszuführen.
+                  SPACON anweisen, <strong>STB901</strong> auszuwählen und Spacecraft Standby Mode
+                  zur Energieeinsparung auszuführen.
                 </td>
                 <td>S/C-Standby aktiv</td>
                 <td>
@@ -5285,24 +5515,32 @@
           v-if="activePanel === 'GS'"
           :is-scenario2="isScenario2"
           :gs1-connection-active="gs1ConnectionActive"
-          :telemetry-gs1="groundStationTelemetry"
-          :telemetry-gs2="groundStation2Telemetry"
+          :telemetry-gs1="displayedGroundStationTelemetry"
+          :telemetry-gs2="displayedGroundStation2Telemetry"
           :tm-history="tmHistoryGS"
         />
 
         <EpsPanel
           v-if="activePanel === 'EPS'"
-          :telemetry="epsTelemetry"
+          :telemetry="displayedEpsTelemetry"
           :tm-history="tmHistoryEPS"
         />
 
-        <AocsPanel v-if="activePanel === 'AOCS'" :telemetry="aocsTelemetry" />
+        <AocsPanel
+          v-if="activePanel === 'AOCS'"
+          :telemetry="aocsTelemetry"
+          :tm-history="tmHistoryAOCS"
+        />
 
-        <TcsPanel v-if="activePanel === 'TCS'" :telemetry="tcsTelemetry" />
+        <TcsPanel
+          v-if="activePanel === 'TCS'"
+          :telemetry="tcsTelemetry"
+          :tm-history="tmHistoryTCS"
+        />
 
         <PayloadPanel
           v-if="activePanel === 'Payload'"
-          :telemetry="payloadTelemetry"
+          :telemetry="displayedPayloadTelemetry"
           :tm-history="tmHistoryPayload"
         />
 
@@ -5312,11 +5550,14 @@
           :captured-image-name="capturedImageName"
           :image-taken="imageTaken"
           :image-validity="imageValidity"
+          :captured-at="capturedImageCapturedAt"
+          :capture-location="capturedImageLocation"
+          :capture-coordinates="capturedImageCoordinates"
         />
 
         <CdhPanel
           v-if="activePanel === 'CDH'"
-          :telemetry="cdhTelemetry"
+          :telemetry="displayedCdhTelemetry"
           :tm-history="tmHistoryMemory"
         />
 
@@ -5483,7 +5724,10 @@
             </tr>
             <tr>
               <th>Erforderliche Aktion</th>
-              <td>Externe Subsystem-Autorität kontaktieren, bevor die Contingency-Prozedur importiert wird.</td>
+              <td>
+                Externe Subsystem-Autorität kontaktieren, bevor die Contingency-Prozedur importiert
+                wird.
+              </td>
             </tr>
           </table>
 

@@ -30,8 +30,14 @@
     return 'NO DATA';
   }
 
+  type TmLog = {
+    time: string;
+    message: string;
+  };
+
   defineProps<{
     telemetry: TelemetryRow[];
+    tmHistory: TmLog[];
   }>();
 </script>
 
@@ -56,5 +62,25 @@
         <td :class="statusClass(row.status)">{{ statusLabel(row.status) }}</td>
       </tr>
     </table>
+
+    <div class="tm-history-panel">
+      <h2>TM History</h2>
+
+      <table class="tm-log-table">
+        <tr>
+          <th>Time</th>
+          <th>TCS TM Log</th>
+        </tr>
+
+        <tr v-if="tmHistory.length === 0">
+          <td colspan="2">Waiting for elevation ≥ 5° and TM lock</td>
+        </tr>
+
+        <tr v-for="(log, index) in tmHistory" :key="index">
+          <td>{{ log.time }}</td>
+          <td>{{ log.message }}</td>
+        </tr>
+      </table>
+    </div>
   </div>
 </template>
