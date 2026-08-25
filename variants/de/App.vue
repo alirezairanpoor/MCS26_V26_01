@@ -63,6 +63,9 @@
   const activePanel = ref('SOM');
   const isScenario2 = computed(() => selectedScenario.value === 'Scenario 2');
   const isElementaryScenario = computed(() => selectedScenario.value === 'Scenario 1 Elementary');
+  const isElementaryAScenario = computed(
+    () => selectedScenario.value === 'Scenario 1 Elementary A'
+  );
 
   const pendingScenario = ref('');
   const introPhase = ref<'menu' | 'fade' | 'video'>('menu');
@@ -1761,27 +1764,331 @@
     powerSavingModeActive,
   });
 
-  function elementaryTelemetryRows<T extends { parameter: string }>(rows: readonly T[]): T[] {
-    if (!isElementaryScenario.value) {
+  // ---------------------------------------------------------------------------
+  // ELEMENTARY SCENARIO TELEMETRY VIEW
+  // ---------------------------------------------------------------------------
+  // Scenario 1 Elementary and Scenario 1 Elementary A use the exact same
+  // mission/procedure/command logic as Scenario 1. Only telemetry presentation
+  // is reduced.
+  //
+  // Elementary   = curated maximum of 20 telemetry rows per subsystem.
+  // Elementary A = curated maximum of 10 telemetry rows per subsystem.
+  //
+  // IMPORTANT:
+  // The reduced sets are procedure-aware. We never select rows alphabetically.
+  // Every telemetry parameter that an SOE must read in Scenario 1 remains visible:
+  //   GS      : GEL005, GSE001, GBL092
+  //   C&DH    : MEM221
+  //   Payload : PLD620, CAM000
+  //   EPS     : EPT014, DCC208, NET118
+  //
+  // Command-correlated parameters that are useful to observe are also retained
+  // where possible (for example PWR740 and IMG901). Source telemetry arrays are
+  // untouched and SPACON continues to use the full telemetry catalog.
+
+  const elementaryGroundStationParameters = [
+    'GEL005',
+    'GSE001',
+    'GBL092',
+    'GCL001',
+    'GFR128',
+    'GAZ230',
+    'GRN420',
+    'GDS740',
+    'GSN612',
+    'GSA002',
+    'GSR104',
+    'GMD416',
+    'GTR221',
+    'GPA510',
+    'GLN118',
+    'GAC103',
+    'GPE106',
+    'GLG119',
+    'GSM134',
+    'GNG137',
+  ] as const;
+
+  const elementaryEpsParameters = [
+    'EPT014',
+    'DCC208',
+    'NET118',
+    'PWR740',
+    'BCH096',
+    'BCH097',
+    'BCH098',
+    'BAT105',
+    'BMS106',
+    'BUS281',
+    'EPS718',
+    'BUS282',
+    'PWR741',
+    'PWR742',
+    'EPS700',
+    'EPS901',
+    'PDU331',
+    'LCL902',
+    'SAW032',
+    'MPP102',
+  ] as const;
+
+  const elementaryAocsParameters = [
+    'AOC001',
+    'AOC003',
+    'AOC004',
+    'AOC010',
+    'ATT111',
+    'ATT112',
+    'ATT113',
+    'ATT121',
+    'ATT122',
+    'ATT123',
+    'ATT130',
+    'ATT131',
+    'ATT132',
+    'ATT133',
+    'ATT134',
+    'STR201',
+    'STR202',
+    'RW701',
+    'RW705',
+    'CTL912',
+  ] as const;
+
+  const elementaryTcsParameters = [
+    'TCS001',
+    'TCS003',
+    'TCS005',
+    'TMP101',
+    'TMP102',
+    'TMP103',
+    'TMP110',
+    'TMP120',
+    'TMP123',
+    'TMP131',
+    'TMP132',
+    'TMP140',
+    'TMP141',
+    'TMP142',
+    'RAD301',
+    'RAD302',
+    'THB606',
+    'THB607',
+    'THB609',
+    'EST702',
+  ] as const;
+
+  const elementaryPayloadParameters = [
+    'PLD600',
+    'PLD620',
+    'PLD621',
+    'PLD622',
+    'PLD623',
+    'PLD624',
+    'PWR701',
+    'PWR702',
+    'PWR703',
+    'CAM000',
+    'CAM201',
+    'SEN331',
+    'SEN332',
+    'FPA341',
+    'GPS113',
+    'GPS117',
+    'IMG901',
+    'IMG902',
+    'IMG903',
+    'IMG911',
+  ] as const;
+
+  const elementaryCdhParameters = [
+    'CDH001',
+    'CDH002',
+    'CPU111',
+    'CPU112',
+    'WDG140',
+    'MEM001',
+    'MEM221',
+    'MEM222',
+    'MEM223',
+    'MEM224',
+    'MEM806',
+    'MEM807',
+    'NET201',
+    'CMD301',
+    'CMD305',
+    'CMD306',
+    'TM401',
+    'TM404',
+    'DMP801',
+    'DMP802',
+  ] as const;
+
+  // Elementary A: 10 operationally useful rows per subsystem.
+  // These are deliberately selected from the already validated 20-row sets.
+  const elementaryAGroundStationParameters = [
+    'GEL005', // Procedure: antenna elevation
+    'GSE001', // Procedure: signal quality
+    'GBL092', // Procedure: beacon level
+    'GCL001', // Carrier lock
+    'GFR128', // Frame synchronization
+    'GAZ230', // Antenna azimuth
+    'GRN420', // Slant range
+    'GDS740', // Doppler offset
+    'GSN612', // Eb/N0
+    'GSA002', // Antenna pedestal temperature
+  ] as const;
+
+  const elementaryAEpsParameters = [
+    'EPT014', // Procedure: EPS main electronics temperature
+    'DCC208', // Procedure: DC/DC converter temperature
+    'NET118', // Procedure: net power margin
+    'PWR740', // Payload power bus / command-correlated state
+    'EPS700', // EPS operating mode
+    'BUS281', // Main bus voltage
+    'EPS718', // Main bus current
+    'BUS282', // Main bus power
+    'BAT105', // Battery pack temperature
+    'SAW032', // Generated solar power
+  ] as const;
+
+  const elementaryAAocsParameters = [
+    'AOC001', // AOCS operating mode
+    'AOC010', // AOCS overall health
+    'ATT130', // Attitude knowledge validity
+    'ATT132', // Attitude control error
+    'ATT133', // Payload pointing error
+    'ATT134', // Settling status
+    'STR201', // Star tracker state
+    'STR202', // Star tracker quality
+    'RW701',  // Reaction wheel speed
+    'CTL912', // Guidance target
+  ] as const;
+
+  const elementaryATcsParameters = [
+    'TCS001', // TCS operating mode
+    'TCS005', // TCS overall health
+    'TMP101', // EPS main electronics temperature
+    'TMP103', // DC/DC converter assembly temperature
+    'TMP110', // Battery pack average temperature
+    'TMP120', // Onboard computer temperature
+    'TMP131', // Reaction wheel assembly temperature
+    'TMP132', // Star tracker assembly temperature
+    'TMP140', // Payload electronics temperature
+    'TMP141', // Payload detector temperature
+  ] as const;
+
+  const elementaryAPayloadParameters = [
+    'PLD600', // Payload overall health
+    'PLD620', // Procedure: instrument mode
+    'PLD622', // Acquisition readiness
+    'PLD623', // Thermal readiness
+    'PLD624', // Storage readiness
+    'PWR703', // Payload electrical power
+    'CAM000', // Procedure: camera configuration
+    'SEN331', // Image sensor temperature
+    'IMG901', // Image capture state / command-correlated state
+    'IMG902', // Imaging window state
+  ] as const;
+
+  const elementaryACdhParameters = [
+    'CDH001', // C&DH overall health
+    'CDH002', // C&DH operating mode
+    'CPU111', // Processor load
+    'CPU112', // Processor temperature
+    'MEM001', // Memory subsystem health
+    'MEM221', // Procedure: payload memory used
+    'MEM222', // Mass memory available
+    'MEM223', // Mass memory state
+    'DMP801', // Memory dump state
+    'DMP802', // Memory dump progress
+  ] as const;
+
+  function elementaryTelemetryRows<T extends { parameter: string }>(
+    rows: readonly T[],
+    elementaryParameters: readonly string[],
+    elementaryAParameters: readonly string[]
+  ): T[] {
+    let parameters: readonly string[];
+    let limit: number;
+
+    if (isElementaryAScenario.value) {
+      parameters = elementaryAParameters;
+      limit = 10;
+    } else if (isElementaryScenario.value) {
+      parameters = elementaryParameters;
+      limit = 20;
+    } else {
       return [...rows];
     }
 
-    return [...rows].sort((a, b) => a.parameter.localeCompare(b.parameter)).slice(0, 20);
+    const order = new Map(parameters.map((parameter, index) => [parameter, index]));
+
+    return rows
+      .filter((row) => order.has(row.parameter))
+      .sort(
+        (a, b) =>
+          (order.get(a.parameter) ?? Number.MAX_SAFE_INTEGER) -
+          (order.get(b.parameter) ?? Number.MAX_SAFE_INTEGER)
+      )
+      .slice(0, limit);
   }
 
   const displayedGroundStationTelemetry = computed(() =>
-    elementaryTelemetryRows(groundStationTelemetry.value)
+    elementaryTelemetryRows(
+      groundStationTelemetry.value,
+      elementaryGroundStationParameters,
+      elementaryAGroundStationParameters
+    )
   );
 
   const displayedGroundStation2Telemetry = computed(() =>
-    elementaryTelemetryRows(groundStation2Telemetry.value)
+    elementaryTelemetryRows(
+      groundStation2Telemetry.value,
+      elementaryGroundStationParameters,
+      elementaryAGroundStationParameters
+    )
   );
 
-  const displayedEpsTelemetry = computed(() => elementaryTelemetryRows(epsTelemetry.value));
-  const displayedAocsTelemetry = computed(() => elementaryTelemetryRows(aocsTelemetry.value));
-  const displayedTcsTelemetry = computed(() => elementaryTelemetryRows(tcsTelemetry.value));
-  const displayedPayloadTelemetry = computed(() => elementaryTelemetryRows(payloadTelemetry.value));
-  const displayedCdhTelemetry = computed(() => elementaryTelemetryRows(cdhTelemetry.value));
+  const displayedEpsTelemetry = computed(() =>
+    elementaryTelemetryRows(
+      epsTelemetry.value,
+      elementaryEpsParameters,
+      elementaryAEpsParameters
+    )
+  );
+
+  const displayedAocsTelemetry = computed(() =>
+    elementaryTelemetryRows(
+      aocsTelemetry.value,
+      elementaryAocsParameters,
+      elementaryAAocsParameters
+    )
+  );
+
+  const displayedTcsTelemetry = computed(() =>
+    elementaryTelemetryRows(
+      tcsTelemetry.value,
+      elementaryTcsParameters,
+      elementaryATcsParameters
+    )
+  );
+
+  const displayedPayloadTelemetry = computed(() =>
+    elementaryTelemetryRows(
+      payloadTelemetry.value,
+      elementaryPayloadParameters,
+      elementaryAPayloadParameters
+    )
+  );
+
+  const displayedCdhTelemetry = computed(() =>
+    elementaryTelemetryRows(
+      cdhTelemetry.value,
+      elementaryCdhParameters,
+      elementaryACdhParameters
+    )
+  );
 
   // ---------------------------------------------------------------------------
   // SPACON PARAMETER / COMMAND CATALOG
@@ -4093,12 +4400,16 @@
 
       <p style="margin-top: 20px">Select a training scenario</p>
 
+      <button :disabled="introPhase !== 'menu'" @click="selectScenario('Scenario 1 Elementary A')">
+        Nominal Ground Pass and Imaging I
+      </button>
+
       <button :disabled="introPhase !== 'menu'" @click="selectScenario('Scenario 1 Elementary')">
-        Nominal Ground Pass and Imaging (Elementary)
+        Nominal Ground Pass and Imaging II
       </button>
 
       <button :disabled="introPhase !== 'menu'" @click="selectScenario('Scenario 1')">
-        Nominal Ground Pass and Imaging
+        Nominal Ground Pass and Imaging III
       </button>
 
       <button :disabled="introPhase !== 'menu'" @click="selectScenario('Scenario 2')">
@@ -4121,7 +4432,14 @@
     </video>
   </div>
 
-  <div v-else class="app" :class="{ 'simulation-fade-out': endingPhase === 'fade' }">
+  <div
+    v-else
+    class="app"
+    :class="{
+      'simulation-fade-out': endingPhase === 'fade',
+      'elementary-a-mode': isElementaryAScenario,
+    }"
+  >
     <div class="sidebar">
       <h2>MCS</h2>
       <button @click="activePanel = 'SOM'">SOM</button>
@@ -4236,7 +4554,601 @@
               }}
             </h2>
 
-            <table class="procedure-table">
+            <table v-if="isElementaryAScenario" class="procedure-table elementary-a-procedure-table">
+              <tr>
+                <th class="col-step">Schritt</th>
+                <th class="col-role">Wer?</th>
+                <th class="col-action">Was tun?</th>
+                <th class="col-criteria">Prüfen / Lernen</th>
+                <th class="col-som">SOM-Aktion</th>
+                <th class="col-status">Status</th>
+              </tr>
+
+              <tr>
+                <td>1</td>
+                <td>SOM</td>
+                <td>
+                  Starte die Simulation. Warte, bis GS1 das Raumfahrzeug empfängt.
+                </td>
+                <td>
+                  <strong>AOS</strong> bedeutet: Die Bodenstation hat Funkkontakt mit dem Raumfahrzeug.
+                </td>
+                <td>
+                  <button
+                    @click="startSimulation"
+                    :disabled="!isSom || simulationStatus === 'RUNNING'"
+                  >
+                    Simulation starten
+                  </button>
+                </td>
+                <td :class="classForStep(1, gs1AosReached)">
+                  {{ statusForStep(1, gs1AosReached) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>2</td>
+                <td>SOM → SOE1</td>
+                <td>
+                  Bitte SOE1: Ground Station öffnen und <strong>GEL005</strong> ablesen.
+                </td>
+                <td>
+                  <strong>GEL005</strong> ist die Elevation: der Winkel des Raumfahrzeugs über dem Horizont.
+                </td>
+                <td>
+                  <button
+                    @click="somAskElevation"
+                    :disabled="!isSom || !canSomAskElevation()"
+                    :class="{ actionFail: failedSomAction === 'askElevation' }"
+                  >
+                    GEL005 anfragen
+                  </button>
+                </td>
+                <td :class="classForStep(2, elevationAskedBySom)">
+                  {{ statusForStep(2, elevationAskedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>3</td>
+                <td>SOM</td>
+                <td>Prüfe den gemeldeten Wert von <strong>GEL005</strong>.</td>
+                <td>
+                  <strong>GEL005 ≥ 5°</strong>. Ab 5° ist das Raumfahrzeug hoch genug für diesen Kontakt.
+                </td>
+                <td>
+                  <button
+                    @click="somConfirmElevation"
+                    :disabled="!isSom || !canSomConfirmElevation()"
+                    :class="{ actionFail: failedSomAction === 'confirmElevation' }"
+                  >
+                    Elevation bestätigen
+                  </button>
+                </td>
+                <td :class="classForStep(3, elevationConfirmedBySom)">
+                  {{ statusForStep(3, elevationConfirmedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>4</td>
+                <td>SOM → SOE2</td>
+                <td>
+                  Bitte SOE2: Ground Station öffnen und <strong>GSE001</strong> und <strong>GBL092</strong> melden.
+                </td>
+                <td>
+                  Ziel: <strong>GSE001 = NOMINAL</strong> und <strong>GBL092 = GOOD</strong>.
+                  Diese Werte zeigen, ob das empfangene Signal gut ist.
+                </td>
+                <td>
+                  <button
+                    @click="somAskSignalQualityBeforeFilter"
+                    :disabled="!isSom || !canAskSignalQualityBeforeFilter()"
+                    :class="{ actionFail: failedSomAction === 'askSignalQuality' }"
+                  >
+                    Signalwerte anfragen
+                  </button>
+                </td>
+                <td :class="classForStep(4, signalQualityReportedBySom)">
+                  {{ statusForStep(4, signalQualityReportedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>5</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>GSE001</strong> wählen und <strong>Filter Signal</strong> ausführen.
+                </td>
+                <td>
+                  Dauer etwa <strong>10 s</strong>. Der Filter hilft, das empfangene Signal zu verbessern.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestSignalFilter"
+                    :disabled="!isSom || !canSomRequestSignalFilter()"
+                    :class="{ actionFail: failedSomAction === 'requestSignalFilter' }"
+                  >
+                    Signalfilter anfordern
+                  </button>
+                </td>
+                <td
+                  :class="
+                    signalFilterRequestedBySom && !signalFiltered
+                      ? 'status-progress'
+                      : classForStep(5, signalFiltered)
+                  "
+                >
+                  {{
+                    signalFiltered
+                      ? 'DONE'
+                      : signalFilterRequestedBySom
+                        ? 'SPACON REQUIRED'
+                        : statusForStep(5, signalFiltered)
+                  }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>6</td>
+                <td>SOM → SOE1</td>
+                <td>
+                  Bitte SOE1: <strong>GSE001</strong> und <strong>GBL092</strong> noch einmal ablesen.
+                </td>
+                <td>
+                  Jetzt sollen <strong>GSE001 = NOMINAL</strong> und <strong>GBL092 = GOOD</strong> sein.
+                  Damit wird geprüft, ob der Filter geholfen hat.
+                </td>
+                <td>
+                  <button
+                    @click="somVerifySignal"
+                    :disabled="!isSom || !canVerifySignal()"
+                    :class="{ actionFail: failedSomAction === 'verifySignal' }"
+                  >
+                    Signal bestätigen
+                  </button>
+                </td>
+                <td :class="classForStep(6, signalVerifiedBySom)">
+                  {{ statusForStep(6, signalVerifiedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>7</td>
+                <td>SOM → SOE2</td>
+                <td>
+                  Bitte SOE2: C&amp;DH öffnen und <strong>MEM221</strong> ablesen.
+                </td>
+                <td>
+                  <strong>MEM221</strong> zeigt, wie viel Speicher belegt ist. Normal sind hier <strong>≤ 10%</strong>.
+                </td>
+                <td>
+                  <button
+                    @click="somAskMemoryBeforeDump"
+                    :disabled="!isSom || !canAskMemoryBeforeDump()"
+                    :class="{ actionFail: failedSomAction === 'askMemoryBefore' }"
+                  >
+                    MEM221 anfragen
+                  </button>
+                </td>
+                <td :class="classForStep(7, memoryAskedBeforeDumpBySom)">
+                  {{ statusForStep(7, memoryAskedBeforeDumpBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>8</td>
+                <td>SOM</td>
+                <td>Entscheide, ob der Speicher geleert werden soll.</td>
+                <td>
+                  <strong>MEM221 ≤ 50%</strong>: genug Platz. <strong>MEM221 &gt; 50%</strong>: Memory Dump nötig.
+                  Ein Dump schafft wieder freien Speicher.
+                </td>
+                <td>
+                  <button
+                    @click="somAuthorizeMemoryDump"
+                    :disabled="!isSom || !canAuthorizeMemoryDump()"
+                    :class="{ actionFail: failedSomAction === 'authorizeMemoryDump' }"
+                  >
+                    Dump erlauben
+                  </button>
+                </td>
+                <td :class="classForStep(8, memoryDumpAuthorizedBySom)">
+                  {{ statusForStep(8, memoryDumpAuthorizedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>9</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>MEM221</strong> wählen und <strong>Dump Payload Memory</strong> ausführen.
+                </td>
+                <td>Dauer etwa <strong>15 s</strong>.</td>
+                <td>
+                  <button
+                    @click="somRequestMemoryDumpBySpacon"
+                    :disabled="!isSom || !canSomRequestMemoryDump()"
+                    :class="{ actionFail: failedSomAction === 'requestMemoryDump' }"
+                  >
+                    Memory Dump anfordern
+                  </button>
+                </td>
+                <td
+                  :class="
+                    memoryDumpStarted && !memoryDumpComplete
+                      ? 'status-progress'
+                      : memoryDumpRequestedBySom && !memoryDumpComplete
+                        ? 'status-progress'
+                        : classForStep(9, memoryDumpComplete)
+                  "
+                >
+                  {{
+                    memoryDumpComplete
+                      ? 'DONE'
+                      : memoryDumpStarted
+                        ? 'IN PROGRESS'
+                        : memoryDumpRequestedBySom
+                          ? 'SPACON REQUIRED'
+                          : statusForStep(9, memoryDumpComplete)
+                  }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>10</td>
+                <td>SOM → SOE1</td>
+                <td>
+                  Bitte SOE1: Nach dem Dump <strong>MEM221</strong> noch einmal ablesen.
+                </td>
+                <td>
+                  Ziel: <strong>MEM221 ≤ 10%</strong>. Dann ist wieder viel Speicher frei.
+                </td>
+                <td>
+                  <button
+                    @click="somAskMemoryAfterDump"
+                    :disabled="!isSom || !canAskMemoryAfterDump()"
+                    :class="{ actionFail: failedSomAction === 'askMemoryAfter' }"
+                  >
+                    MEM221 nach Dump prüfen
+                  </button>
+                </td>
+                <td :class="classForStep(10, memoryAskedAfterDumpBySom)">
+                  {{ statusForStep(10, memoryAskedAfterDumpBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>11</td>
+                <td>SOM → SOE2</td>
+                <td>
+                  Bitte SOE2: Payload öffnen und <strong>PLD620</strong> ablesen.
+                </td>
+                <td>
+                  Ziel: <strong>PLD620 = STANDBY</strong>. STANDBY bedeutet: Das Instrument wartet und ist noch nicht aktiv.
+                </td>
+                <td>
+                  <button
+                    @click="somAskPayloadInstrumentMode"
+                    :disabled="!isSom || !canAskPayloadInstrumentMode()"
+                    :class="{ actionFail: failedSomAction === 'askPayloadInstrumentMode' }"
+                  >
+                    PLD620 anfragen
+                  </button>
+                </td>
+                <td :class="classForStep(11, payloadInstrumentModeReportedBySom)">
+                  {{ statusForStep(11, payloadInstrumentModeReportedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>12</td>
+                <td>SOM → SOE1</td>
+                <td>
+                  Bitte SOE1: EPS öffnen und <strong>EPT014</strong>, <strong>DCC208</strong> und <strong>NET118</strong> melden.
+                </td>
+                <td>
+                  <div><strong>EPT014 &lt; 75°C</strong> — Temperatur der EPS-Elektronik.</div>
+                  <div><strong>DCC208 = 40–60°C</strong> — Temperatur des DC/DC-Wandlers.</div>
+                  <div><strong>NET118 ≈ 1160 W</strong> — verfügbare Leistungsreserve.</div>
+                </td>
+                <td>
+                  <button
+                    @click="somAskEps"
+                    :disabled="!isSom || !canSomAskEps()"
+                    :class="{ actionFail: failedSomAction === 'askEps' }"
+                  >
+                    EPS-Werte anfragen
+                  </button>
+                </td>
+                <td :class="classForStep(12, epsAskedBySom)">
+                  {{ statusForStep(12, epsAskedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>13</td>
+                <td>SOM</td>
+                <td>Prüfe besonders die Temperatur <strong>EPT014</strong>.</td>
+                <td>
+                  Wenn <strong>EPT014 &gt; 85°C</strong>, muss sofort reagiert werden.
+                  Zu hohe Temperatur kann Elektronik gefährden.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestMitigation"
+                    :disabled="!isSom || !canSomRequestMitigation()"
+                    :class="{ actionFail: failedSomAction === 'requestMitigation' }"
+                  >
+                    Mitigation anfordern
+                  </button>
+                </td>
+                <td :class="classForStep(13, epsMitigationRequestedBySom)">
+                  {{ statusForStep(13, epsMitigationRequestedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>14</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>EPT014</strong> wählen und <strong>Reduce Payload Power</strong> ausführen.
+                </td>
+                <td>
+                  Dauer etwa <strong>15 s</strong>. Weniger elektrische Leistung erzeugt normalerweise weniger Wärme.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestPayloadReductionCommand"
+                    :disabled="!isSom || !canSomRequestPayloadReductionCommand()"
+                    :class="{ actionFail: failedSomAction === 'requestPayloadReduction' }"
+                  >
+                    Payload-Leistung reduzieren
+                  </button>
+                </td>
+                <td
+                  :class="
+                    powerReductionInProgress
+                      ? 'status-progress'
+                      : payloadReductionCommandRequestedBySom && !powerReducedBySpacon
+                        ? 'status-progress'
+                        : classForStep(14, powerReducedBySpacon)
+                  "
+                >
+                  {{
+                    powerReductionInProgress
+                      ? 'IN PROGRESS'
+                      : powerReducedBySpacon
+                        ? 'DONE'
+                        : payloadReductionCommandRequestedBySom
+                          ? 'SPACON REQUIRED'
+                          : statusForStep(14, powerReducedBySpacon)
+                  }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>15</td>
+                <td>SOM → SOE2</td>
+                <td>
+                  Bitte SOE2: EPS erneut öffnen und <strong>EPT014</strong> und <strong>NET118</strong> melden.
+                </td>
+                <td>
+                  Ziel nach der Mitigation: <strong>EPT014 &lt; 75°C</strong> und <strong>NET118 &lt; 1160 W</strong>.
+                </td>
+                <td>
+                  <button
+                    @click="somAskEpsAfterMitigation"
+                    :disabled="!isSom || !canSomAskEpsAfterMitigation()"
+                    :class="{ actionFail: failedSomAction === 'askEpsAfter' }"
+                  >
+                    EPS erneut prüfen
+                  </button>
+                </td>
+                <td :class="classForStep(15, epsAskedAfterMitigationBySom)">
+                  {{ statusForStep(15, epsAskedAfterMitigationBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>16</td>
+                <td>SOM</td>
+                <td>Bestätige, dass EPS wieder im normalen Bereich ist.</td>
+                <td>
+                  <strong>EPT014 = 70–75°C</strong> und <strong>NET118 = 1100–1140 W</strong>.
+                  Das zeigt: Die Abkühlung funktioniert.
+                </td>
+                <td>
+                  <button
+                    @click="somConfirmEpsNominal"
+                    :disabled="!isSom || !canSomConfirmEps()"
+                    :class="{ actionFail: failedSomAction === 'confirmEps' }"
+                  >
+                    EPS nominal bestätigen
+                  </button>
+                </td>
+                <td :class="classForStep(16, epsConfirmedBySom)">
+                  {{ statusForStep(16, epsConfirmedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>17</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>PWR740</strong> wählen und <strong>Increase Payload Power</strong> ausführen.
+                </td>
+                <td>
+                  Dauer etwa <strong>15 s</strong>. Danach soll <strong>NET118 ≈ 1160 W</strong> sein.
+                  Für die Aufnahme braucht das Payload wieder mehr Leistung.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestNormalPayloadPowerIncrease"
+                    :disabled="!isSom || !canSomRequestNormalPayloadPowerIncrease()"
+                    :class="{ actionFail: failedSomAction === 'requestNormalPowerIncrease' }"
+                  >
+                    Payload-Leistung erhöhen
+                  </button>
+                </td>
+                <td
+                  :class="
+                    powerIncreaseInProgress
+                      ? 'status-progress'
+                      : normalPayloadPowerIncreaseRequestedBySom && !payloadPowerRaised
+                        ? 'status-progress'
+                        : classForStep(17, payloadPowerRaised)
+                  "
+                >
+                  {{
+                    payloadPowerRaised
+                      ? 'DONE'
+                      : powerIncreaseInProgress
+                        ? 'IN PROGRESS'
+                        : normalPayloadPowerIncreaseRequestedBySom
+                          ? 'SPACON REQUIRED'
+                          : statusForStep(17, payloadPowerRaised)
+                  }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>18</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>CAM000</strong> wählen und <strong>Configure Camera</strong> ausführen.
+                </td>
+                <td>
+                  Die Kamera wird für die Aufnahme vorbereitet. Achtung: Danach kann die EPS-Temperatur um etwa <strong>0,03°C/s</strong> steigen.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestNormalCameraConfiguration"
+                    :disabled="!isSom || !canSomRequestNormalCameraConfiguration()"
+                    :class="{ actionFail: failedSomAction === 'requestNormalCameraConfig' }"
+                  >
+                    Kamera konfigurieren
+                  </button>
+                </td>
+                <td
+                  :class="
+                    normalCameraConfigurationRequestedBySom && !cameraConfigured
+                      ? 'status-progress'
+                      : classForStep(18, cameraConfigured)
+                  "
+                >
+                  {{
+                    cameraConfigured
+                      ? 'DONE'
+                      : normalCameraConfigurationRequestedBySom
+                        ? 'SPACON REQUIRED'
+                        : statusForStep(18, cameraConfigured)
+                  }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>19</td>
+                <td>SOM → SOE1</td>
+                <td>
+                  Bitte SOE1: Payload öffnen und <strong>CAM000</strong> ablesen.
+                </td>
+                <td>
+                  Ziel: <strong>CAM000 = READY</strong>. READY bedeutet: Die Kamera ist bereit für die Aufnahme.
+                </td>
+                <td>
+                  <button
+                    @click="somVerifyCamera"
+                    :disabled="!isSom || !canVerifyCamera()"
+                    :class="{ actionFail: failedSomAction === 'verifyCamera' }"
+                  >
+                    Kamera prüfen
+                  </button>
+                </td>
+                <td :class="classForStep(19, cameraVerifiedBySom)">
+                  {{ statusForStep(19, cameraVerifiedBySom) }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>20</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>IMG901</strong> wählen und die Aufnahme von Frankfurt Airport ausführen.
+                </td>
+                <td>
+                  Aufnahmefenster: <strong>T+15:00 bis T+16:00</strong>.
+                  Das Zeitfenster ist wichtig, weil das Raumfahrzeug nur kurz über dem Ziel ist.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestNormalImageCapture"
+                    :disabled="!isSom || !canSomRequestNormalImageCapture()"
+                    :class="{ actionFail: failedSomAction === 'requestNormalImageCapture' }"
+                  >
+                    Aufnahme anfordern
+                  </button>
+                </td>
+                <td
+                  :class="
+                    imageTaken
+                      ? 'status-good'
+                      : normalImageCaptureRequestedBySom
+                        ? 'status-progress'
+                        : currentProcedureStep === 20
+                          ? 'status-warning'
+                          : 'status-empty'
+                  "
+                >
+                  {{
+                    imageTaken
+                      ? 'DONE'
+                      : normalImageCaptureRequestedBySom
+                        ? 'SPACON REQUIRED'
+                        : currentProcedureStep === 20
+                          ? 'CURRENT'
+                          : 'PENDING'
+                  }}
+                </td>
+              </tr>
+
+              <tr>
+                <td>21</td>
+                <td>SOM → SPACON</td>
+                <td>
+                  Bitte SPACON: <strong>STB901</strong> wählen und <strong>Spacecraft Standby Mode</strong> ausführen.
+                </td>
+                <td>
+                  Ziel: <strong>S/C Standby aktiv</strong>. Im Standby spart das Raumfahrzeug Energie.
+                </td>
+                <td>
+                  <button
+                    @click="somRequestNormalSpacecraftStandby"
+                    :disabled="!isSom || !canSomRequestNormalSpacecraftStandby()"
+                    :class="{ actionFail: failedSomAction === 'requestNormalStandby' }"
+                  >
+                    Standby anfordern
+                  </button>
+                </td>
+                <td
+                  :class="
+                    spacecraftStandbyRequestedBySom && !spacecraftStandbyActive
+                      ? 'status-progress'
+                      : classForStep(21, spacecraftStandbyActive)
+                  "
+                >
+                  {{
+                    spacecraftStandbyActive
+                      ? 'DONE'
+                      : spacecraftStandbyRequestedBySom
+                        ? 'SPACON REQUIRED'
+                        : statusForStep(21, spacecraftStandbyActive)
+                  }}
+                </td>
+              </tr>
+            </table>
+
+            <table v-else class="procedure-table">
               <tr>
                 <th class="col-step">Schritt</th>
                 <th class="col-role">Rolle</th>
@@ -5528,13 +6440,13 @@
 
         <AocsPanel
           v-if="activePanel === 'AOCS'"
-          :telemetry="aocsTelemetry"
+          :telemetry="displayedAocsTelemetry"
           :tm-history="tmHistoryAOCS"
         />
 
         <TcsPanel
           v-if="activePanel === 'TCS'"
-          :telemetry="tcsTelemetry"
+          :telemetry="displayedTcsTelemetry"
           :tm-history="tmHistoryTCS"
         />
 
@@ -5792,3 +6704,51 @@
     </div>
   </Transition>
 </template>
+
+<style>
+/* Elementary A: larger, more readable 10-row telemetry presentation.
+   Kept in App.vue intentionally so subsystem components and style.css are unchanged. */
+.app.elementary-a-mode .telemetry-table {
+  font-size: 16px;
+}
+
+.app.elementary-a-mode .telemetry-table th {
+  padding: 10px 12px;
+  line-height: 1.35;
+}
+
+.app.elementary-a-mode .telemetry-table td {
+  padding: 12px 12px;
+  line-height: 1.5;
+}
+
+
+/* Elementary A: simplified procedure is intentionally isolated from every
+   other scenario. Only this dedicated table receives the larger typography. */
+.app.elementary-a-mode .elementary-a-procedure-table {
+  font-size: 15px;
+}
+
+.app.elementary-a-mode .elementary-a-procedure-table th {
+  padding: 10px 9px;
+  line-height: 1.35;
+  font-size: 14px;
+}
+
+.app.elementary-a-mode .elementary-a-procedure-table td {
+  padding: 12px 9px;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+.app.elementary-a-mode .elementary-a-procedure-table strong {
+  font-size: 1.03em;
+}
+
+.app.elementary-a-mode .elementary-a-procedure-table button {
+  font-size: 14px;
+  line-height: 1.3;
+  padding: 9px 7px;
+}
+</style>
+
