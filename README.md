@@ -33,6 +33,15 @@ The Host computer does not need to act as an operator.
 
 ---
 
+## Documentation
+
+For complete installation, operation, spacecraft-system background, mission scenarios, troubleshooting, and engineering notes, see the full user manual:
+
+- [MCS26 User Manual – Rev. A](docs/MCS26_User_Manual_RevA.pdf)
+- [Quick Start / Run Simulation](RUN_SIMULATION.md)
+
+---
+
 ## Scenarios
 
 ### Scenario 1 — Nominal Ground Pass and Imaging
