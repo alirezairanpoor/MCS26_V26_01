@@ -3752,6 +3752,8 @@
 
     tcHistory.value = [];
     tmHistoryGS.value = [];
+    tmHistoryAOCS.value = [];
+    tmHistoryTCS.value = [];
     tmHistoryEPS.value = [];
     tmHistoryPayload.value = [];
     tmHistoryMemory.value = [];

@@ -3429,6 +3429,8 @@
     tmHistoryEPS.value = [];
     tmHistoryPayload.value = [];
     tmHistoryMemory.value = [];
+    tmHistoryAOCS.value = [];
+    tmHistoryTCS.value = [];
     lastTmLogSecond = -1;
 
     if (timerId !== undefined) {
